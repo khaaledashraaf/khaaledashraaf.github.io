@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { AsciiBackground } from "@/components/ascii-background";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,6 +60,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AsciiBackground />
           <Navbar />
           <main className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-3xl px-6">
             {children}
