@@ -1,0 +1,401 @@
+<svg width="549" height="84" viewBox="0 0 549 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .char {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      font-weight: 700;
+      fill: #24292f;
+      transform-box: fill-box;
+      animation: wave 1.3s ease-in-out infinite;
+    }
+    
+    @keyframes wave {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      .char { fill: #e6edf3; }
+    }
+    
+    .c0 { animation-delay: 0.000s; }
+    .c1 { animation-delay: 0.025s; }
+    .c2 { animation-delay: 0.050s; }
+    .c3 { animation-delay: 0.075s; }
+    .c4 { animation-delay: 0.100s; }
+    .c5 { animation-delay: 0.125s; }
+    .c6 { animation-delay: 0.150s; }
+    .c7 { animation-delay: 0.175s; }
+    .c8 { animation-delay: 0.200s; }
+    .c9 { animation-delay: 0.225s; }
+    .c10 { animation-delay: 0.250s; }
+    .c11 { animation-delay: 0.275s; }
+    .c12 { animation-delay: 0.300s; }
+    .c13 { animation-delay: 0.325s; }
+    .c14 { animation-delay: 0.350s; }
+    .c15 { animation-delay: 0.375s; }
+    .c16 { animation-delay: 0.400s; }
+    .c17 { animation-delay: 0.425s; }
+    .c18 { animation-delay: 0.450s; }
+    .c19 { animation-delay: 0.475s; }
+    .c20 { animation-delay: 0.500s; }
+    .c21 { animation-delay: 0.525s; }
+    .c22 { animation-delay: 0.550s; }
+    .c23 { animation-delay: 0.575s; }
+    .c24 { animation-delay: 0.600s; }
+    .c25 { animation-delay: 0.625s; }
+    .c26 { animation-delay: 0.650s; }
+    .c27 { animation-delay: 0.675s; }
+    .c28 { animation-delay: 0.700s; }
+    .c29 { animation-delay: 0.725s; }
+    .c30 { animation-delay: 0.750s; }
+    .c31 { animation-delay: 0.775s; }
+    .c32 { animation-delay: 0.800s; }
+    .c33 { animation-delay: 0.825s; }
+    .c34 { animation-delay: 0.850s; }
+    .c35 { animation-delay: 0.875s; }
+    .c36 { animation-delay: 0.900s; }
+    .c37 { animation-delay: 0.925s; }
+    .c38 { animation-delay: 0.950s; }
+    .c39 { animation-delay: 0.975s; }
+    .c40 { animation-delay: 1.000s; }
+    .c41 { animation-delay: 1.025s; }
+    .c42 { animation-delay: 1.050s; }
+    .c43 { animation-delay: 1.075s; }
+    .c44 { animation-delay: 1.100s; }
+    .c45 { animation-delay: 1.125s; }
+    .c46 { animation-delay: 1.150s; }
+    .c47 { animation-delay: 1.175s; }
+    .c48 { animation-delay: 1.200s; }
+    .c49 { animation-delay: 1.225s; }
+    .c50 { animation-delay: 1.250s; }
+    .c51 { animation-delay: 1.275s; }
+    .c52 { animation-delay: 1.300s; }
+    .c53 { animation-delay: 1.325s; }
+    .c54 { animation-delay: 1.350s; }
+    .c55 { animation-delay: 1.375s; }
+    .c56 { animation-delay: 1.400s; }
+    .c57 { animation-delay: 1.425s; }
+    .c58 { animation-delay: 1.450s; }
+    .c59 { animation-delay: 1.475s; }
+    .c60 { animation-delay: 1.500s; }
+    .c61 { animation-delay: 1.525s; }
+    .c62 { animation-delay: 1.550s; }
+  </style>
+  
+  <text x="0.0" y="14" class="char c0"> </text>
+  <text x="8.4" y="14" class="char c1">_</text>
+  <text x="16.8" y="14" class="char c2"> </text>
+  <text x="25.200000000000003" y="14" class="char c3"> </text>
+  <text x="33.6" y="14" class="char c4"> </text>
+  <text x="42.0" y="14" class="char c5"> </text>
+  <text x="50.400000000000006" y="14" class="char c6">_</text>
+  <text x="58.800000000000004" y="14" class="char c7"> </text>
+  <text x="67.2" y="14" class="char c8"> </text>
+  <text x="75.60000000000001" y="14" class="char c9"> </text>
+  <text x="84.0" y="14" class="char c10"> </text>
+  <text x="92.4" y="14" class="char c11"> </text>
+  <text x="100.80000000000001" y="14" class="char c12"> </text>
+  <text x="109.2" y="14" class="char c13"> </text>
+  <text x="117.60000000000001" y="14" class="char c14"> </text>
+  <text x="126.0" y="14" class="char c15"> </text>
+  <text x="134.4" y="14" class="char c16"> </text>
+  <text x="142.8" y="14" class="char c17"> </text>
+  <text x="151.20000000000002" y="14" class="char c18">_</text>
+  <text x="159.6" y="14" class="char c19"> </text>
+  <text x="168.0" y="14" class="char c20"> </text>
+  <text x="176.4" y="14" class="char c21"> </text>
+  <text x="184.8" y="14" class="char c22"> </text>
+  <text x="193.20000000000002" y="14" class="char c23"> </text>
+  <text x="201.60000000000002" y="14" class="char c24"> </text>
+  <text x="210.0" y="14" class="char c25"> </text>
+  <text x="218.4" y="14" class="char c26"> </text>
+  <text x="226.8" y="14" class="char c27"> </text>
+  <text x="235.20000000000002" y="14" class="char c28"> </text>
+  <text x="243.60000000000002" y="14" class="char c29">_</text>
+  <text x="252.0" y="14" class="char c30"> </text>
+  <text x="260.40000000000003" y="14" class="char c31"> </text>
+  <text x="268.8" y="14" class="char c32"> </text>
+  <text x="277.2" y="14" class="char c33"> </text>
+  <text x="285.6" y="14" class="char c34"> </text>
+  <text x="294.0" y="14" class="char c35"> </text>
+  <text x="302.40000000000003" y="14" class="char c36"> </text>
+  <text x="310.8" y="14" class="char c37"> </text>
+  <text x="319.2" y="14" class="char c38"> </text>
+  <text x="327.6" y="14" class="char c39"> </text>
+  <text x="336.0" y="14" class="char c40"> </text>
+  <text x="344.40000000000003" y="14" class="char c41"> </text>
+  <text x="352.8" y="14" class="char c42"> </text>
+  <text x="361.2" y="14" class="char c43">_</text>
+  <text x="369.6" y="14" class="char c44"> </text>
+  <text x="378.0" y="14" class="char c45"> </text>
+  <text x="386.40000000000003" y="14" class="char c46"> </text>
+  <text x="394.8" y="14" class="char c47"> </text>
+  <text x="403.20000000000005" y="14" class="char c48"> </text>
+  <text x="411.6" y="14" class="char c49"> </text>
+  <text x="420.0" y="14" class="char c50"> </text>
+  <text x="428.40000000000003" y="14" class="char c51"> </text>
+  <text x="436.8" y="14" class="char c52"> </text>
+  <text x="445.20000000000005" y="14" class="char c53"> </text>
+  <text x="453.6" y="14" class="char c54"> </text>
+  <text x="462.0" y="14" class="char c55"> </text>
+  <text x="470.40000000000003" y="14" class="char c56"> </text>
+  <text x="478.8" y="14" class="char c57"> </text>
+  <text x="487.20000000000005" y="14" class="char c58"> </text>
+  <text x="495.6" y="14" class="char c59"> </text>
+  <text x="504.0" y="14" class="char c60">_</text>
+  <text x="512.4" y="14" class="char c61">_</text>
+  <text x="520.8000000000001" y="14" class="char c62"> </text>
+  <text x="0.0" y="28" class="char c0">|</text>
+  <text x="8.4" y="28" class="char c1"> </text>
+  <text x="16.8" y="28" class="char c2">|</text>
+  <text x="25.200000000000003" y="28" class="char c3"> </text>
+  <text x="33.6" y="28" class="char c4">_</text>
+  <text x="42.0" y="28" class="char c5">|</text>
+  <text x="50.400000000000006" y="28" class="char c6"> </text>
+  <text x="58.800000000000004" y="28" class="char c7">|</text>
+  <text x="67.2" y="28" class="char c8">_</text>
+  <text x="75.60000000000001" y="28" class="char c9">_</text>
+  <text x="84.0" y="28" class="char c10"> </text>
+  <text x="92.4" y="28" class="char c11"> </text>
+  <text x="100.80000000000001" y="28" class="char c12"> </text>
+  <text x="109.2" y="28" class="char c13">_</text>
+  <text x="117.60000000000001" y="28" class="char c14">_</text>
+  <text x="126.0" y="28" class="char c15"> </text>
+  <text x="134.4" y="28" class="char c16">_</text>
+  <text x="142.8" y="28" class="char c17">|</text>
+  <text x="151.20000000000002" y="28" class="char c18"> </text>
+  <text x="159.6" y="28" class="char c19">|</text>
+  <text x="168.0" y="28" class="char c20"> </text>
+  <text x="176.4" y="28" class="char c21">_</text>
+  <text x="184.8" y="28" class="char c22">_</text>
+  <text x="193.20000000000002" y="28" class="char c23">_</text>
+  <text x="201.60000000000002" y="28" class="char c24"> </text>
+  <text x="210.0" y="28" class="char c25"> </text>
+  <text x="218.4" y="28" class="char c26">_</text>
+  <text x="226.8" y="28" class="char c27">_</text>
+  <text x="235.20000000000002" y="28" class="char c28">|</text>
+  <text x="243.60000000000002" y="28" class="char c29"> </text>
+  <text x="252.0" y="28" class="char c30">|</text>
+  <text x="260.40000000000003" y="28" class="char c31"> </text>
+  <text x="268.8" y="28" class="char c32"> </text>
+  <text x="277.2" y="28" class="char c33"> </text>
+  <text x="285.6" y="28" class="char c34">_</text>
+  <text x="294.0" y="28" class="char c35">_</text>
+  <text x="302.40000000000003" y="28" class="char c36"> </text>
+  <text x="310.8" y="28" class="char c37">_</text>
+  <text x="319.2" y="28" class="char c38"> </text>
+  <text x="327.6" y="28" class="char c39">_</text>
+  <text x="336.0" y="28" class="char c40">_</text>
+  <text x="344.40000000000003" y="28" class="char c41">_</text>
+  <text x="352.8" y="28" class="char c42">|</text>
+  <text x="361.2" y="28" class="char c43"> </text>
+  <text x="369.6" y="28" class="char c44">|</text>
+  <text x="378.0" y="28" class="char c45">_</text>
+  <text x="386.40000000000003" y="28" class="char c46">_</text>
+  <text x="394.8" y="28" class="char c47"> </text>
+  <text x="403.20000000000005" y="28" class="char c48"> </text>
+  <text x="411.6" y="28" class="char c49">_</text>
+  <text x="420.0" y="28" class="char c50"> </text>
+  <text x="428.40000000000003" y="28" class="char c51">_</text>
+  <text x="436.8" y="28" class="char c52">_</text>
+  <text x="445.20000000000005" y="28" class="char c53"> </text>
+  <text x="453.6" y="28" class="char c54">_</text>
+  <text x="462.0" y="28" class="char c55">_</text>
+  <text x="470.40000000000003" y="28" class="char c56"> </text>
+  <text x="478.8" y="28" class="char c57">_</text>
+  <text x="487.20000000000005" y="28" class="char c58"> </text>
+  <text x="495.6" y="28" class="char c59">/</text>
+  <text x="504.0" y="28" class="char c60"> </text>
+  <text x="512.4" y="28" class="char c61">_</text>
+  <text x="520.8000000000001" y="28" class="char c62">|</text>
+  <text x="0.0" y="42" class="char c0">|</text>
+  <text x="8.4" y="42" class="char c1"> </text>
+  <text x="16.8" y="42" class="char c2">|</text>
+  <text x="25.200000000000003" y="42" class="char c3">/</text>
+  <text x="33.6" y="42" class="char c4"> </text>
+  <text x="42.0" y="42" class="char c5">/</text>
+  <text x="50.400000000000006" y="42" class="char c6"> </text>
+  <text x="58.800000000000004" y="42" class="char c7">'</text>
+  <text x="67.2" y="42" class="char c8">_</text>
+  <text x="75.60000000000001" y="42" class="char c9"> </text>
+  <text x="84.0" y="42" class="char c10">\</text>
+  <text x="92.4" y="42" class="char c11"> </text>
+  <text x="100.80000000000001" y="42" class="char c12">/</text>
+  <text x="109.2" y="42" class="char c13"> </text>
+  <text x="117.60000000000001" y="42" class="char c14">_</text>
+  <text x="126.0" y="42" class="char c15">`</text>
+  <text x="134.4" y="42" class="char c16"> </text>
+  <text x="142.8" y="42" class="char c17">|</text>
+  <text x="151.20000000000002" y="42" class="char c18"> </text>
+  <text x="159.6" y="42" class="char c19">|</text>
+  <text x="168.0" y="42" class="char c20">/</text>
+  <text x="176.4" y="42" class="char c21"> </text>
+  <text x="184.8" y="42" class="char c22">_</text>
+  <text x="193.20000000000002" y="42" class="char c23"> </text>
+  <text x="201.60000000000002" y="42" class="char c24">\</text>
+  <text x="210.0" y="42" class="char c25">/</text>
+  <text x="218.4" y="42" class="char c26"> </text>
+  <text x="226.8" y="42" class="char c27">_</text>
+  <text x="235.20000000000002" y="42" class="char c28">`</text>
+  <text x="243.60000000000002" y="42" class="char c29"> </text>
+  <text x="252.0" y="42" class="char c30">|</text>
+  <text x="260.40000000000003" y="42" class="char c31"> </text>
+  <text x="268.8" y="42" class="char c32"> </text>
+  <text x="277.2" y="42" class="char c33">/</text>
+  <text x="285.6" y="42" class="char c34"> </text>
+  <text x="294.0" y="42" class="char c35">_</text>
+  <text x="302.40000000000003" y="42" class="char c36">`</text>
+  <text x="310.8" y="42" class="char c37"> </text>
+  <text x="319.2" y="42" class="char c38">/</text>
+  <text x="327.6" y="42" class="char c39"> </text>
+  <text x="336.0" y="42" class="char c40">_</text>
+  <text x="344.40000000000003" y="42" class="char c41">_</text>
+  <text x="352.8" y="42" class="char c42">|</text>
+  <text x="361.2" y="42" class="char c43"> </text>
+  <text x="369.6" y="42" class="char c44">'</text>
+  <text x="378.0" y="42" class="char c45">_</text>
+  <text x="386.40000000000003" y="42" class="char c46"> </text>
+  <text x="394.8" y="42" class="char c47">\</text>
+  <text x="403.20000000000005" y="42" class="char c48">|</text>
+  <text x="411.6" y="42" class="char c49"> </text>
+  <text x="420.0" y="42" class="char c50">'</text>
+  <text x="428.40000000000003" y="42" class="char c51">_</text>
+  <text x="436.8" y="42" class="char c52">_</text>
+  <text x="445.20000000000005" y="42" class="char c53">/</text>
+  <text x="453.6" y="42" class="char c54"> </text>
+  <text x="462.0" y="42" class="char c55">_</text>
+  <text x="470.40000000000003" y="42" class="char c56">`</text>
+  <text x="478.8" y="42" class="char c57"> </text>
+  <text x="487.20000000000005" y="42" class="char c58">|</text>
+  <text x="495.6" y="42" class="char c59"> </text>
+  <text x="504.0" y="42" class="char c60">|</text>
+  <text x="512.4" y="42" class="char c61">_</text>
+  <text x="520.8000000000001" y="42" class="char c62"> </text>
+  <text x="0.0" y="56" class="char c0">|</text>
+  <text x="8.4" y="56" class="char c1"> </text>
+  <text x="16.8" y="56" class="char c2"> </text>
+  <text x="25.200000000000003" y="56" class="char c3"> </text>
+  <text x="33.6" y="56" class="char c4">&lt;</text>
+  <text x="42.0" y="56" class="char c5">|</text>
+  <text x="50.400000000000006" y="56" class="char c6"> </text>
+  <text x="58.800000000000004" y="56" class="char c7">|</text>
+  <text x="67.2" y="56" class="char c8"> </text>
+  <text x="75.60000000000001" y="56" class="char c9">|</text>
+  <text x="84.0" y="56" class="char c10"> </text>
+  <text x="92.4" y="56" class="char c11">|</text>
+  <text x="100.80000000000001" y="56" class="char c12"> </text>
+  <text x="109.2" y="56" class="char c13">(</text>
+  <text x="117.60000000000001" y="56" class="char c14">_</text>
+  <text x="126.0" y="56" class="char c15">|</text>
+  <text x="134.4" y="56" class="char c16"> </text>
+  <text x="142.8" y="56" class="char c17">|</text>
+  <text x="151.20000000000002" y="56" class="char c18"> </text>
+  <text x="159.6" y="56" class="char c19">|</text>
+  <text x="168.0" y="56" class="char c20"> </text>
+  <text x="176.4" y="56" class="char c21"> </text>
+  <text x="184.8" y="56" class="char c22">_</text>
+  <text x="193.20000000000002" y="56" class="char c23">_</text>
+  <text x="201.60000000000002" y="56" class="char c24">/</text>
+  <text x="210.0" y="56" class="char c25"> </text>
+  <text x="218.4" y="56" class="char c26">(</text>
+  <text x="226.8" y="56" class="char c27">_</text>
+  <text x="235.20000000000002" y="56" class="char c28">|</text>
+  <text x="243.60000000000002" y="56" class="char c29"> </text>
+  <text x="252.0" y="56" class="char c30">|</text>
+  <text x="260.40000000000003" y="56" class="char c31"> </text>
+  <text x="268.8" y="56" class="char c32">|</text>
+  <text x="277.2" y="56" class="char c33"> </text>
+  <text x="285.6" y="56" class="char c34">(</text>
+  <text x="294.0" y="56" class="char c35">_</text>
+  <text x="302.40000000000003" y="56" class="char c36">|</text>
+  <text x="310.8" y="56" class="char c37"> </text>
+  <text x="319.2" y="56" class="char c38">\</text>
+  <text x="327.6" y="56" class="char c39">_</text>
+  <text x="336.0" y="56" class="char c40">_</text>
+  <text x="344.40000000000003" y="56" class="char c41"> </text>
+  <text x="352.8" y="56" class="char c42">\</text>
+  <text x="361.2" y="56" class="char c43"> </text>
+  <text x="369.6" y="56" class="char c44">|</text>
+  <text x="378.0" y="56" class="char c45"> </text>
+  <text x="386.40000000000003" y="56" class="char c46">|</text>
+  <text x="394.8" y="56" class="char c47"> </text>
+  <text x="403.20000000000005" y="56" class="char c48">|</text>
+  <text x="411.6" y="56" class="char c49"> </text>
+  <text x="420.0" y="56" class="char c50">|</text>
+  <text x="428.40000000000003" y="56" class="char c51"> </text>
+  <text x="436.8" y="56" class="char c52">|</text>
+  <text x="445.20000000000005" y="56" class="char c53"> </text>
+  <text x="453.6" y="56" class="char c54">(</text>
+  <text x="462.0" y="56" class="char c55">_</text>
+  <text x="470.40000000000003" y="56" class="char c56">|</text>
+  <text x="478.8" y="56" class="char c57"> </text>
+  <text x="487.20000000000005" y="56" class="char c58">|</text>
+  <text x="495.6" y="56" class="char c59"> </text>
+  <text x="504.0" y="56" class="char c60"> </text>
+  <text x="512.4" y="56" class="char c61">_</text>
+  <text x="520.8000000000001" y="56" class="char c62">|</text>
+  <text x="0.0" y="70" class="char c0">|</text>
+  <text x="8.4" y="70" class="char c1">_</text>
+  <text x="16.8" y="70" class="char c2">|</text>
+  <text x="25.200000000000003" y="70" class="char c3">\</text>
+  <text x="33.6" y="70" class="char c4">_</text>
+  <text x="42.0" y="70" class="char c5">\</text>
+  <text x="50.400000000000006" y="70" class="char c6">_</text>
+  <text x="58.800000000000004" y="70" class="char c7">|</text>
+  <text x="67.2" y="70" class="char c8"> </text>
+  <text x="75.60000000000001" y="70" class="char c9">|</text>
+  <text x="84.0" y="70" class="char c10">_</text>
+  <text x="92.4" y="70" class="char c11">|</text>
+  <text x="100.80000000000001" y="70" class="char c12">\</text>
+  <text x="109.2" y="70" class="char c13">_</text>
+  <text x="117.60000000000001" y="70" class="char c14">_</text>
+  <text x="126.0" y="70" class="char c15">,</text>
+  <text x="134.4" y="70" class="char c16">_</text>
+  <text x="142.8" y="70" class="char c17">|</text>
+  <text x="151.20000000000002" y="70" class="char c18">_</text>
+  <text x="159.6" y="70" class="char c19">|</text>
+  <text x="168.0" y="70" class="char c20">\</text>
+  <text x="176.4" y="70" class="char c21">_</text>
+  <text x="184.8" y="70" class="char c22">_</text>
+  <text x="193.20000000000002" y="70" class="char c23">_</text>
+  <text x="201.60000000000002" y="70" class="char c24">/</text>
+  <text x="210.0" y="70" class="char c25">\</text>
+  <text x="218.4" y="70" class="char c26">_</text>
+  <text x="226.8" y="70" class="char c27">_</text>
+  <text x="235.20000000000002" y="70" class="char c28">,</text>
+  <text x="243.60000000000002" y="70" class="char c29">_</text>
+  <text x="252.0" y="70" class="char c30">|</text>
+  <text x="260.40000000000003" y="70" class="char c31"> </text>
+  <text x="268.8" y="70" class="char c32"> </text>
+  <text x="277.2" y="70" class="char c33">\</text>
+  <text x="285.6" y="70" class="char c34">_</text>
+  <text x="294.0" y="70" class="char c35">_</text>
+  <text x="302.40000000000003" y="70" class="char c36">,</text>
+  <text x="310.8" y="70" class="char c37">_</text>
+  <text x="319.2" y="70" class="char c38">|</text>
+  <text x="327.6" y="70" class="char c39">_</text>
+  <text x="336.0" y="70" class="char c40">_</text>
+  <text x="344.40000000000003" y="70" class="char c41">_</text>
+  <text x="352.8" y="70" class="char c42">/</text>
+  <text x="361.2" y="70" class="char c43">_</text>
+  <text x="369.6" y="70" class="char c44">|</text>
+  <text x="378.0" y="70" class="char c45"> </text>
+  <text x="386.40000000000003" y="70" class="char c46">|</text>
+  <text x="394.8" y="70" class="char c47">_</text>
+  <text x="403.20000000000005" y="70" class="char c48">|</text>
+  <text x="411.6" y="70" class="char c49">_</text>
+  <text x="420.0" y="70" class="char c50">|</text>
+  <text x="428.40000000000003" y="70" class="char c51"> </text>
+  <text x="436.8" y="70" class="char c52"> </text>
+  <text x="445.20000000000005" y="70" class="char c53">\</text>
+  <text x="453.6" y="70" class="char c54">_</text>
+  <text x="462.0" y="70" class="char c55">_</text>
+  <text x="470.40000000000003" y="70" class="char c56">,</text>
+  <text x="478.8" y="70" class="char c57">_</text>
+  <text x="487.20000000000005" y="70" class="char c58">|</text>
+  <text x="495.6" y="70" class="char c59">_</text>
+  <text x="504.0" y="70" class="char c60">|</text>
+  <text x="512.4" y="70" class="char c61"> </text>
+  <text x="520.8000000000001" y="70" class="char c62"> </text>
+</svg>
