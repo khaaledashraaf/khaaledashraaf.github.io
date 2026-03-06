@@ -61,7 +61,7 @@ export default function RootLayout({
         >
           <AsciiBackground />
           <Navbar />
-          <main className="relative z-10 mx-auto min-h-[calc(100vh-3.5rem)] max-w-4xl px-6 bg-white/40">
+          <main className="relative z-10 mx-auto min-h-[calc(100vh-3.5rem)] max-w-4xl px-6 bg-white/40 dark:bg-transparent">
             {children}
           </main>
           <Footer />
