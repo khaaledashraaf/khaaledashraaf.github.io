@@ -19,33 +19,33 @@ const previousTools = [
 
 export function Hero() {
   return (
-    <section className="flex flex-col gap-8 py-16 sm:py-24">
-      <div className="flex flex-col gap-4">
+    <section className="flex flex-col items-center gap-8 py-16 sm:py-24">
+      <div className="flex flex-col items-center gap-4">
         <Image
           src="/header.svg"
           alt="Khaled Ashraf"
           width={549}
           height={84}
           priority
-          className="dark:invert w-full max-w-[450px]"
+          className="dark:invert w-full max-w-[550px]"
         />
-        <p className="font-mono text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="text-sm leading-relaxed text-muted-foreground sm:text-base text-center">
           Product Designer with a background in Computer Engineering.
           <br />
           Building at the intersection of design tools and code.
         </p>
       </div>
 
-      <p className="font-mono text-sm text-muted-foreground">
-        Currently at <span className="font-semibold text-foreground">noon</span> — improving how
+      <p className="text-sm text-muted-foreground text-center">
+        Currently at <a href="https://www.linkedin.com/company/nooncom/"><span className="font-semibold text-foreground hover:underline">noon</span></a> — improving how
         designers and engineers collaborate.
       </p>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col items-center gap-3">
         <p className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Working with
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {currentTools.map((tool) => (
             <Badge key={tool.label} variant="secondary" className={tool.color}>
               {tool.label}
@@ -54,11 +54,11 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col items-center gap-3">
         <p className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Previously
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {previousTools.map((tool) => (
             <Badge key={tool.label} variant="secondary" className={tool.color}>
               {tool.label}

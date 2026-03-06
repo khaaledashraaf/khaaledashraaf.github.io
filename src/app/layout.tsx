@@ -58,11 +58,10 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
         >
           <AsciiBackground />
           <Navbar />
-          <main className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-3xl px-6">
+          <main className="relative z-10 mx-auto min-h-[calc(100vh-3.5rem)] max-w-4xl px-6 bg-white/40">
             {children}
           </main>
           <Footer />

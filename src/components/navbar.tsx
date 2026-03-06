@@ -17,7 +17,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-sm">
-      <nav className="mx-auto flex h-14 max-w-3xl items-center justify-center px-6">
+      <nav className="mx-auto flex h-14 max-w-4xl items-center justify-center px-6">
         <div className="flex items-center gap-6">
           <ul className="flex items-center gap-6">
             {links.map(({ href, label }) => (
