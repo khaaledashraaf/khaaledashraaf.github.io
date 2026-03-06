@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   { href: "/", label: "Home" },
@@ -20,23 +21,26 @@ export function Navbar() {
         <Link href="/" className="font-mono text-sm font-bold tracking-tight">
           KA
         </Link>
-        <ul className="flex items-center gap-6">
-          {links.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  "text-sm transition-colors hover:text-foreground",
-                  pathname === href || (href !== "/" && pathname.startsWith(href))
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                )}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-6">
+          <ul className="flex items-center gap-6">
+            {links.map(({ href, label }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={cn(
+                    "text-sm transition-colors hover:text-foreground",
+                    pathname === href || (href !== "/" && pathname.startsWith(href))
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );

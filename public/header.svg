@@ -14,10 +14,6 @@
       50% { transform: translateY(-2px); }
     }
     
-    @media (prefers-color-scheme: dark) {
-      .char { fill: #e6edf3; }
-    }
-    
     .c0 { animation-delay: 0.000s; }
     .c1 { animation-delay: 0.025s; }
     .c2 { animation-delay: 0.050s; }
