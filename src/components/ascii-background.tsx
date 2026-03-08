@@ -213,22 +213,34 @@ export function AsciiBackground() {
     return () => clearInterval(id);
   }, [mounted, frames.bird, isDark]);
 
-  // --- Clouds: drift right-to-left (direct DOM) ---
+  // --- Clouds: drift right-to-left (rAF for smooth 60fps, transform for GPU compositing) ---
   useEffect(() => {
     if (!mounted || frames.cloud.length === 0 || isDark) return;
 
     const positions = cloudData.map((c) => c.initialX);
+    let prev = 0;
+    let rafId: number;
 
-    const id = setInterval(() => {
+    const tick = (now: number) => {
+      const dt = prev ? now - prev : 0;
+      prev = now;
+
       cloudData.forEach((cloud, i) => {
-        positions[i] -= cloud.speed;
+        positions[i] -= cloud.speed * (dt / 100);
         if (positions[i] < -30) positions[i] = 120 + Math.random() * 20;
         const el = cloudRefs.current[i];
-        if (el) el.style.left = `${positions[i]}%`;
+        if (el) {
+          const sy = scrollYRef.current;
+          el.style.transform =
+            `translateX(${positions[i]}vw) scale(${cloud.scale}) translateY(${sy * -0.15}px)`;
+        }
       });
-    }, 100);
 
-    return () => clearInterval(id);
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [mounted, frames.cloud, isDark, cloudData]);
 
   if (!mounted) return null;
@@ -275,11 +287,9 @@ export function AsciiBackground() {
                 ref={(el) => {
                   cloudRefs.current[i] = el;
                 }}
-                className="absolute origin-top-left font-mono text-[10px] leading-tight text-sky-500"
+                className="absolute left-0 origin-top-left font-mono text-[10px] leading-tight text-sky-500"
                 style={{
-                  left: `${cloud.initialX}%`,
                   top: `${cloud.y}%`,
-                  transform: `scale(${cloud.scale}) translateY(calc(var(--sy, 0) * -0.15px))`,
                   opacity: cloud.opacity,
                 }}
               >
@@ -296,7 +306,7 @@ export function AsciiBackground() {
             className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
             style={{
               background:
-                "radial-gradient(100px at var(--mx, -100px) var(--my, -100px), rgba(255,255,255,0.06), transparent)",
+                "radial-gradient(100px at var(--mx, -100px) var(--my, -100px), rgba(255,255,255,0.04), transparent)",
               opacity: "var(--mouse-in, 0)",
             }}
           />
