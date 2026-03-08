@@ -55,7 +55,7 @@ function generateClouds(count: number) {
       y: 30 + Math.random() * 40, // vertical position 10-50% from top
       speed: 0.08 + Math.random() * 0.08, // slower speeds (0.08-0.16)
       scale: 0.6 + Math.random() * 0.3, // smaller sizes (0.5-0.8)
-      opacity: 0.2 + Math.random() * 0.4, // varied opacity (0.15-0.3)
+      opacity: 0.5 + Math.random() * 0.7, // varied opacity (0.15-0.3)
     });
   }
   
@@ -100,6 +100,10 @@ export function AsciiBackground() {
   // --- Parallax state ---
   const [scrollY, setScrollY] = useState(0);
   
+  // --- Cursor glow state (dark mode) ---
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMouseInWindow, setIsMouseInWindow] = useState(false);
+  
   // --- Interval refs ---
   const sunIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const birdIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -140,6 +144,30 @@ export function AsciiBackground() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, [mounted]);
+
+  // -------------------------------------------------------------------------
+  // Cursor glow tracker (dark mode only)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (!mounted) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+      setIsMouseInWindow(true);
+    };
+
+    const handleMouseLeave = () => {
+      setIsMouseInWindow(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
   }, [mounted]);
 
   // -------------------------------------------------------------------------
@@ -261,7 +289,7 @@ export function AsciiBackground() {
           {/* Sun - fixed position, top right, slow parallax */}
           {sunFrames.length > 0 && (
             <pre 
-              className="absolute right-4 top-[5rem] font-mono text-[10px] leading-tight text-amber-500/50 sm:text-xs"
+              className="absolute right-4 top-[5rem] font-mono text-[10px] leading-tight text-amber-500/70 sm:text-xs"
               style={{
                 transform: `translateY(${scrollY * -0.1}px)`,
                 willChange: 'transform',
@@ -292,7 +320,7 @@ export function AsciiBackground() {
           {cloudFrames.length > 0 && cloudData.map((cloud, i) => (
             <pre
               key={cloud.id}
-              className="absolute origin-top-left font-mono text-[10px] leading-tight text-sky-600"
+              className="absolute origin-top-left font-mono text-[10px] leading-tight text-sky-500"
               style={{
                 left: `${cloudPositions[i]}%`,
                 top: `${cloud.y}%`,
@@ -307,9 +335,19 @@ export function AsciiBackground() {
         </>
       )}
 
-      {/* ===== DARK MODE: Moon + Stars ===== */}
+      {/* ===== DARK MODE: Moon + Stars + Cursor Glow ===== */}
       {isDark && (
         <>
+          {/* Cursor glow - subtle radial gradient following mouse */}
+          {isMouseInWindow && (
+            <div
+              className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(100px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 255, 255, 0.06), transparent)`,
+              }}
+            />
+          )}
+          
           {/* Moon - fixed position, top right, slow parallax */}
           {moonFrames.length > 0 && (
             <pre 
