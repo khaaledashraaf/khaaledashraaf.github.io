@@ -4,62 +4,99 @@ import { useTheme } from "next-themes";
 import { useEffect, useState, useRef, useMemo } from "react";
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+interface CloudConfig {
+  id: number;
+  y: number;
+  speed: number;
+  scale: number;
+  opacity: number;
+  initialX: number;
+}
+
+// ============================================================================
 // UTILITIES
 // ============================================================================
 
-// Loads ASCII keyframes from public folder
-// Expects files named: {prefix}-kf1.txt, {prefix}-kf2.txt, etc.
 async function loadAsciiFrames(basePath: string, prefix: string) {
   const frames: string[] = [];
   let index = 1;
-
   while (true) {
     try {
       const res = await fetch(`${basePath}/${prefix}-kf${index}.txt`);
       if (!res.ok) break;
-      const text = await res.text();
-      frames.push(text);
+      frames.push(await res.text());
       index++;
     } catch {
       break;
     }
   }
-
   return frames;
 }
 
-// Generates random star positions (seeded for consistency)
 function generateStars(count: number) {
-  const stars: { x: number; y: number; char: string; delay: number }[] = [];
   const chars = ["*", ".", "+", "·"];
-  
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      x: Math.random() * 100,
-      y: Math.random() * 60, // keep stars in upper 60% of screen
-      char: chars[Math.floor(Math.random() * chars.length)],
-      delay: Math.random() * 3, // random twinkle delay 0-3s
-    });
-  }
-  
-  return stars;
+  return Array.from({ length: count }, () => ({
+    x: Math.random() * 100,
+    y: Math.random() * 60,
+    char: chars[Math.floor(Math.random() * chars.length)],
+    delay: Math.random() * 3,
+  }));
 }
 
-// Generates cloud data with varied positions and speeds
-function generateClouds(count: number) {
-  const clouds: { id: number; y: number; speed: number; scale: number; opacity: number }[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    clouds.push({
-      id: i,
-      y: 30 + Math.random() * 40, // vertical position 10-50% from top
-      speed: 0.08 + Math.random() * 0.08, // slower speeds (0.08-0.16)
-      scale: 0.6 + Math.random() * 0.3, // smaller sizes (0.5-0.8)
-      opacity: 0.5 + Math.random() * 0.7, // varied opacity (0.15-0.3)
-    });
-  }
-  
-  return clouds;
+function generateClouds(count: number): CloudConfig[] {
+  const initialPositions = [20, 60, 110];
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    y: 30 + Math.random() * 40,
+    speed: 0.08 + Math.random() * 0.08,
+    scale: 0.6 + Math.random() * 0.3,
+    opacity: 0.5 + Math.random() * 0.7,
+    initialX: initialPositions[i] ?? 60,
+  }));
+}
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+/**
+ * Ping-pong animates a <pre> element's textContent through ASCII keyframes.
+ * All updates go straight to the DOM — zero React re-renders.
+ */
+function usePingPongFrames(
+  frames: string[],
+  intervalMs: number,
+  active: boolean
+) {
+  const ref = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    if (!active || frames.length < 2) return;
+
+    let index = 0;
+    let dir = 1;
+
+    const id = setInterval(() => {
+      const next = index + dir;
+      if (next >= frames.length - 1) {
+        dir = -1;
+        index = frames.length - 1;
+      } else if (next <= 0) {
+        dir = 1;
+        index = 0;
+      } else {
+        index = next;
+      }
+      if (ref.current) ref.current.textContent = frames[index];
+    }, intervalMs);
+
+    return () => clearInterval(id);
+  }, [frames, intervalMs, active]);
+
+  return ref;
 }
 
 // ============================================================================
@@ -69,299 +106,214 @@ function generateClouds(count: number) {
 export function AsciiBackground() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
-  // --- Sun state (light mode) ---
-  const [sunFrames, setSunFrames] = useState<string[]>([]);
-  const [sunFrameIndex, setSunFrameIndex] = useState(0);
-  const [sunDirection, setSunDirection] = useState(1); // 1 = forward, -1 = backward (ping-pong)
-  
-  // --- Bird state (light mode) ---
-  const [birdFrames, setBirdFrames] = useState<string[]>([]);
-  const [birdFrameIndex, setBirdFrameIndex] = useState(0);
-  const [birdPosition, setBirdPosition] = useState(-10); // horizontal position in %
-  const birdTickRef = useRef(0); // used to decouple flap speed from movement speed
-  
-  // --- Cloud state (light mode) ---
-  const [cloudFrames, setCloudFrames] = useState<string[]>([]);
-  const cloudData = useMemo(() => generateClouds(3), []);
-  const [cloudPositions, setCloudPositions] = useState<number[]>(() => 
-    // Stagger initial positions across the screen
-    [20, 60, 110]
-  );
-  
-  // --- Moon state (dark mode) ---
-  const [moonFrames, setMoonFrames] = useState<string[]>([]);
-  const [moonFrameIndex, setMoonFrameIndex] = useState(0);
-  const [moonDirection, setMoonDirection] = useState(1);
-  
-  // --- Stars (dark mode) ---
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
+
+  const [frames, setFrames] = useState({
+    sun: [] as string[],
+    bird: [] as string[],
+    moon: [] as string[],
+    cloud: [] as string[],
+  });
+
   const stars = useMemo(() => generateStars(25), []);
-  
-  // --- Parallax state ---
-  const [scrollY, setScrollY] = useState(0);
-  
-  // --- Cursor glow state (dark mode) ---
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isMouseInWindow, setIsMouseInWindow] = useState(false);
-  
-  // --- Interval refs ---
-  const sunIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const birdIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const moonIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const cloudIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // -------------------------------------------------------------------------
-  // Load frames on mount
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    setMounted(true);
-
-    async function loadAllFrames() {
-      const [sun, bird, moon, cloud] = await Promise.all([
-        loadAsciiFrames("/ascii/sun", "sun"),
-        loadAsciiFrames("/ascii/bird", "bird"),
-        loadAsciiFrames("/ascii/moon", "moon"),
-        loadAsciiFrames("/ascii/cloud", "cloud"),
-      ]);
-      if (sun.length > 0) setSunFrames(sun);
-      if (bird.length > 0) setBirdFrames(bird);
-      if (moon.length > 0) setMoonFrames(moon);
-      if (cloud.length > 0) setCloudFrames(cloud);
-    }
-
-    loadAllFrames();
-  }, []);
-
-  // -------------------------------------------------------------------------
-  // Parallax scroll listener
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [mounted]);
-
-  // -------------------------------------------------------------------------
-  // Cursor glow tracker (dark mode only)
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-      setIsMouseInWindow(true);
-    };
-
-    const handleMouseLeave = () => {
-      setIsMouseInWindow(false);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    document.addEventListener("mouseleave", handleMouseLeave);
-    
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [mounted]);
-
-  // -------------------------------------------------------------------------
-  // Sun animation: ping-pong through keyframes
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted || sunFrames.length === 0) return;
-
-    sunIntervalRef.current = setInterval(() => {
-      setSunFrameIndex((prev) => {
-        const next = prev + sunDirection;
-        if (next >= sunFrames.length - 1) {
-          setSunDirection(-1); // reverse at end
-          return sunFrames.length - 1;
-        }
-        if (next <= 0) {
-          setSunDirection(1); // reverse at start
-          return 0;
-        }
-        return next;
-      });
-    }, 400); // ms per frame
-
-    return () => {
-      if (sunIntervalRef.current) clearInterval(sunIntervalRef.current);
-    };
-  }, [mounted, sunFrames.length, sunDirection]);
-
-  // -------------------------------------------------------------------------
-  // Bird animation: flap + fly left-to-right (light mode)
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted || birdFrames.length === 0 || resolvedTheme === "dark") return;
-
-    birdIntervalRef.current = setInterval(() => {
-      // Cycle through flap keyframes (vertical bob synced via birdFrameIndex)
-      setBirdFrameIndex((prev) => (prev + 1) % birdFrames.length);
-      
-      // Move horizontally every 3rd tick (keeps horizontal speed same despite faster flapping)
-      birdTickRef.current += 1;
-      if (birdTickRef.current % 3 === 0) {
-        setBirdPosition((prev) => {
-          const next = prev + 1.5;
-          if (next > 110) return -10; // loop back when off-screen
-          return next;
-        });
-      }
-    }, 100); // ms per flap (faster flapping)
-
-    return () => {
-      if (birdIntervalRef.current) clearInterval(birdIntervalRef.current);
-    };
-  }, [mounted, birdFrames.length, resolvedTheme]);
-
-  // -------------------------------------------------------------------------
-  // Cloud animation: drift right-to-left slowly (light mode)
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted || cloudFrames.length === 0 || resolvedTheme === "dark") return;
-
-    cloudIntervalRef.current = setInterval(() => {
-      setCloudPositions((prev) =>
-        prev.map((pos, i) => {
-          const speed = cloudData[i].speed;
-          const next = pos - speed;
-          // Reset to right side when off-screen left
-          if (next < -30) return 120 + Math.random() * 20;
-          return next;
-        })
-      );
-    }, 100);
-
-    return () => {
-      if (cloudIntervalRef.current) clearInterval(cloudIntervalRef.current);
-    };
-  }, [mounted, cloudFrames.length, resolvedTheme, cloudData]);
-
-  // -------------------------------------------------------------------------
-  // Moon animation: ping-pong through keyframes (dark mode)
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!mounted || moonFrames.length === 0 || resolvedTheme !== "dark") return;
-
-    moonIntervalRef.current = setInterval(() => {
-      setMoonFrameIndex((prev) => {
-        const next = prev + moonDirection;
-        if (next >= moonFrames.length - 1) {
-          setMoonDirection(-1);
-          return moonFrames.length - 1;
-        }
-        if (next <= 0) {
-          setMoonDirection(1);
-          return 0;
-        }
-        return next;
-      });
-    }, 600); // slower than sun for calmer night feel
-
-    return () => {
-      if (moonIntervalRef.current) clearInterval(moonIntervalRef.current);
-    };
-  }, [mounted, moonFrames.length, moonDirection, resolvedTheme]);
-
-  // -------------------------------------------------------------------------
-  // Render
-  // -------------------------------------------------------------------------
-  
-  // Don't render until mounted (avoid hydration mismatch)
-  if (!mounted) return null;
+  const cloudData = useMemo(() => generateClouds(3), []);
 
   const isDark = resolvedTheme === "dark";
 
+  const sunRef = usePingPongFrames(frames.sun, 400, mounted && !isDark);
+  const moonRef = usePingPongFrames(frames.moon, 600, mounted && isDark);
+
+  const birdWrapRef = useRef<HTMLDivElement>(null);
+  const birdPreRef = useRef<HTMLPreElement>(null);
+  const cloudRefs = useRef<(HTMLPreElement | null)[]>([]);
+
+  // --- Load frames once on mount ---
+  useEffect(() => {
+    setMounted(true);
+    Promise.all([
+      loadAsciiFrames("/ascii/sun", "sun"),
+      loadAsciiFrames("/ascii/bird", "bird"),
+      loadAsciiFrames("/ascii/moon", "moon"),
+      loadAsciiFrames("/ascii/cloud", "cloud"),
+    ]).then(([sun, bird, moon, cloud]) =>
+      setFrames({ sun, bird, moon, cloud })
+    );
+  }, []);
+
+  // --- Scroll → CSS custom property (rAF-throttled, no re-renders) ---
+  useEffect(() => {
+    if (!mounted) return;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        scrollYRef.current = y;
+        containerRef.current?.style.setProperty("--sy", String(y));
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mounted]);
+
+  // --- Mouse → CSS custom properties (no re-renders) ---
+  useEffect(() => {
+    if (!mounted) return;
+
+    const onMove = (e: MouseEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      el.style.setProperty("--mx", `${e.clientX}px`);
+      el.style.setProperty("--my", `${e.clientY}px`);
+      el.style.setProperty("--mouse-in", "1");
+    };
+    const onLeave = () =>
+      containerRef.current?.style.setProperty("--mouse-in", "0");
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    document.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
+    };
+  }, [mounted]);
+
+  // --- Bird: flap + fly (direct DOM) ---
+  useEffect(() => {
+    if (!mounted || frames.bird.length === 0 || isDark) return;
+
+    let frame = 0;
+    let tick = 0;
+    let posVw = -10;
+
+    const id = setInterval(() => {
+      frame = (frame + 1) % frames.bird.length;
+      tick++;
+      if (tick % 3 === 0) {
+        posVw += 1.5;
+        if (posVw > 110) posVw = -10;
+      }
+
+      const sy = scrollYRef.current;
+      if (birdWrapRef.current) {
+        birdWrapRef.current.style.transform =
+          `translateX(${posVw}vw) translateY(${frame * 3 - sy * 0.8}px)`;
+      }
+      if (birdPreRef.current) {
+        birdPreRef.current.textContent = frames.bird[frame];
+      }
+    }, 100);
+
+    return () => clearInterval(id);
+  }, [mounted, frames.bird, isDark]);
+
+  // --- Clouds: drift right-to-left (direct DOM) ---
+  useEffect(() => {
+    if (!mounted || frames.cloud.length === 0 || isDark) return;
+
+    const positions = cloudData.map((c) => c.initialX);
+
+    const id = setInterval(() => {
+      cloudData.forEach((cloud, i) => {
+        positions[i] -= cloud.speed;
+        if (positions[i] < -30) positions[i] = 120 + Math.random() * 20;
+        const el = cloudRefs.current[i];
+        if (el) el.style.left = `${positions[i]}%`;
+      });
+    }, 100);
+
+    return () => clearInterval(id);
+  }, [mounted, frames.cloud, isDark, cloudData]);
+
+  if (!mounted) return null;
+
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      
-      {/* ===== LIGHT MODE: Sun + Bird ===== */}
+    <div
+      ref={containerRef}
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+    >
+      {/* ===== LIGHT MODE ===== */}
       {!isDark && (
         <>
-          {/* Sun - fixed position, top right, slow parallax */}
-          {sunFrames.length > 0 && (
-            <pre 
+          {frames.sun.length > 0 && (
+            <pre
+              ref={sunRef}
               className="absolute right-4 top-[5rem] font-mono text-[10px] leading-tight text-amber-500/70 sm:text-xs"
               style={{
-                transform: `translateY(${scrollY * -0.1}px)`,
-                willChange: 'transform',
+                transform: "translateY(calc(var(--sy, 0) * -0.1px))",
               }}
             >
-              {sunFrames[sunFrameIndex]}
+              {frames.sun[0]}
             </pre>
           )}
-          
-          {/* Bird - flies left to right, bobs vertically with flap, fast parallax */}
-          {birdFrames.length > 0 && (
+
+          {frames.bird.length > 0 && (
             <div
-              className="absolute left-0 top-[10%] flex items-center justify-center"
-              style={{ 
-                transform: `translateX(${birdPosition}vw) translateY(${birdFrameIndex * 3 - scrollY * 0.8}px)`,
-                width: '8ch',
-                height: '2em',
-                willChange: 'transform',
-              }}
+              ref={birdWrapRef}
+              className="absolute left-0 top-[10%]"
+              style={{ width: "8ch", height: "2em" }}
             >
-              <pre className="font-mono text-[10px] leading-tight text-foreground/50 sm:text-xs">
-                {birdFrames[birdFrameIndex]}
+              <pre
+                ref={birdPreRef}
+                className="font-mono text-[10px] leading-tight text-foreground/50 sm:text-xs"
+              >
+                {frames.bird[0]}
               </pre>
             </div>
           )}
-          
-          {/* Clouds - drift slowly right to left */}
-          {cloudFrames.length > 0 && cloudData.map((cloud, i) => (
-            <pre
-              key={cloud.id}
-              className="absolute origin-top-left font-mono text-[10px] leading-tight text-sky-500"
-              style={{
-                left: `${cloudPositions[i]}%`,
-                top: `${cloud.y}%`,
-                transform: `scale(${cloud.scale}) translateY(${scrollY * -0.15}px)`,
-                opacity: cloud.opacity,
-                willChange: 'transform, left',
-              }}
-            >
-              {cloudFrames[0]}
-            </pre>
-          ))}
+
+          {frames.cloud.length > 0 &&
+            cloudData.map((cloud, i) => (
+              <pre
+                key={cloud.id}
+                ref={(el) => {
+                  cloudRefs.current[i] = el;
+                }}
+                className="absolute origin-top-left font-mono text-[10px] leading-tight text-sky-500"
+                style={{
+                  left: `${cloud.initialX}%`,
+                  top: `${cloud.y}%`,
+                  transform: `scale(${cloud.scale}) translateY(calc(var(--sy, 0) * -0.15px))`,
+                  opacity: cloud.opacity,
+                }}
+              >
+                {frames.cloud[0]}
+              </pre>
+            ))}
         </>
       )}
 
-      {/* ===== DARK MODE: Moon + Stars + Cursor Glow ===== */}
+      {/* ===== DARK MODE ===== */}
       {isDark && (
         <>
-          {/* Cursor glow - subtle radial gradient following mouse */}
-          {isMouseInWindow && (
-            <div
-              className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
-              style={{
-                background: `radial-gradient(100px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 255, 255, 0.06), transparent)`,
-              }}
-            />
-          )}
-          
-          {/* Moon - fixed position, top right, slow parallax */}
-          {moonFrames.length > 0 && (
-            <pre 
+          <div
+            className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+            style={{
+              background:
+                "radial-gradient(100px at var(--mx, -100px) var(--my, -100px), rgba(255,255,255,0.06), transparent)",
+              opacity: "var(--mouse-in, 0)",
+            }}
+          />
+
+          {frames.moon.length > 0 && (
+            <pre
+              ref={moonRef}
               className="absolute left-4 top-[6rem] origin-top-left font-mono text-[10px] leading-tight text-foreground/40"
               style={{
-                transform: `scale(2.5) translateY(${scrollY * -0.1}px)`,
-                willChange: 'transform',
+                transform:
+                  "scale(2.5) translateY(calc(var(--sy, 0) * -0.1px))",
               }}
             >
-              {moonFrames[moonFrameIndex]}
+              {frames.moon[0]}
             </pre>
           )}
-          
-          {/* Stars - twinkling scattered across the sky */}
+
           {stars.map((star, i) => (
             <span
               key={i}
@@ -369,9 +321,8 @@ export function AsciiBackground() {
               style={{
                 left: `${star.x}%`,
                 top: `${star.y}%`,
-                transform: `translateY(${scrollY * -0.05}px)`,
+                transform: "translateY(calc(var(--sy, 0) * -0.05px))",
                 animationDelay: `${star.delay}s`,
-                willChange: 'transform, opacity',
               }}
             >
               {star.char}
