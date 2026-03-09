@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 
 export function Footer() {
   return (
-    <footer className="relative mt-52">
+    <footer className="relative -mt-40">
       {/* ASCII art - positioned behind with negative margin overlap */}
       <div className="relative z-0 -mt-32 pointer-events-none">
         <Image
@@ -11,7 +11,7 @@ export function Footer() {
           alt=""
           width={1920}
           height={400}
-          className="w-full h-auto opacity-60 dark:opacity-60 dark:invert pb-20"
+          className="w-full h-auto opacity-60 dark:opacity-60 dark:invert pb-6"
           priority={false}
         />
       </div>
