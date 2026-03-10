@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllSlugs, getPostBySlug } from "@/lib/blog";
+import {ArrowLeft} from "lucide-react";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -33,9 +34,9 @@ export default async function BlogPostPage({ params }: PageProps) {
       <div className="mb-8 flex flex-col gap-2">
         <Link
           href="/blog"
-          className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground flex items-center"
         >
-          &larr; Back to blog
+          <ArrowLeft className="w-4 h-4 inline-block mr-1" /> Back to blog
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">{post.title}</h1>
         <time className="font-mono text-xs text-muted-foreground">
