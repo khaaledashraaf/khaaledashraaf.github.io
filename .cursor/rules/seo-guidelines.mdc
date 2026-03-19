@@ -1,0 +1,47 @@
+---
+description: SEO best practices for portfolio pages
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# SEO Guidelines
+
+## Page Metadata
+
+Every page route should export metadata with at minimum:
+
+```tsx
+export const metadata: Metadata = {
+  title: "Page Title",
+  description: "Unique description under 160 characters.",
+};
+```
+
+The root layout already sets `title.template: "%s — Khaled Ashraf"` so page titles auto-append your name.
+
+## Blog Posts
+
+Blog posts in `src/content/blog/*.mdx` should have complete frontmatter:
+
+```mdx
+---
+title: "Descriptive Title"
+date: "YYYY-MM-DD"
+description: "Compelling description for search results and social sharing."
+---
+```
+
+## URLs
+
+- Keep URLs clean: `/projects/design-system` not `/projects/project-1`
+- Use lowercase with hyphens, no underscores or special characters
+
+## When Adding New Pages
+
+1. Add unique title and description metadata
+2. Update `public/sitemap.xml` with the new URL
+3. If it's a blog post, the description becomes the search snippet
+
+## OpenGraph Images (Future)
+
+When ready to enhance social sharing, add `opengraph-image.png` files to route folders. Next.js auto-detects them.

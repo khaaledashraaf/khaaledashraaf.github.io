@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     title: "Khaled Ashraf",
     description:
       "Product Designer with a background in Computer Engineering. Building at the intersection of design tools and code.",
-    url: "https://khaaledashraaf.github.io",
+    url: "https://khaledashraf.me",
     siteName: "Khaled Ashraf",
     locale: "en_US",
     type: "website",
