@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { AsciiBackground } from "@/components/ascii-background";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -69,6 +70,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProvider>
+        <GoogleAnalytics gaId="G-LCV0P4FHDY" />
       </body>
     </html>
   );
