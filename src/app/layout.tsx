@@ -24,9 +24,6 @@ export const metadata: Metadata = {
   },
   description:
     "Product Designer with a background in Computer Engineering. Building at the intersection of design tools and code.",
-  icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌞</text></svg>",
-  },
   openGraph: {
     title: "Khaled Ashraf",
     description:
