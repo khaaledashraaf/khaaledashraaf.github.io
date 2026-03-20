@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <div className="flex flex-col items-center justify-center gap-6">
+    <div className="flex flex-col items-center justify-center gap-6 min-h-screen pb-50">
       <Image
-        className="grayscale contrast-150"
+        className="grayscale contrast-150 dark:invert"
         src="/character-lying-on-grass.gif"
         alt="Coming soon"
         width={420}

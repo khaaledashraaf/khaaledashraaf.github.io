@@ -16,6 +16,15 @@ export function SeaReel() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    // Free previous video buffer before loading next
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+
+    // Set new source and position
+    video.src = reels[index].src;
+    video.style.objectPosition = reels[index].position;
     video.load();
     video.play().catch(() => {});
 
@@ -23,22 +32,24 @@ export function SeaReel() {
       setIndex((i) => (i + 1) % reels.length);
     }, 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Release buffer on cleanup
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
   }, [index]);
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       <video
         ref={videoRef}
-        key={index}
         muted
         playsInline
-        autoPlay
+        preload="none"
         className="w-full h-full object-cover"
-        style={{ objectPosition: reels[index].position }}
-      >
-        <source src={reels[index].src} type="video/webm" />
-      </video>
+      />
       <div className="absolute inset-0 bg-black/40" />
     </div>
   );
