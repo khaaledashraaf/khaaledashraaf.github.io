@@ -19,16 +19,18 @@ export function Footer({ showArt = true, light = false }: { showArt?: boolean; l
       )}
 
       {/* Character animation - centered, decorative */}
-      <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
-        <video
-          src="/character-lying-on-grass.webm"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-64 md:w-80 dark:invert opacity-80"
-        />
-      </div>
+      {showArt && (
+        <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
+          <video
+            src="/character-lying-on-grass.webm"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-64 md:w-80 dark:invert opacity-80"
+          />
+        </div>
+      )}
 
       {/* Footer content */}
       <div className="relative z-10 py-8">
