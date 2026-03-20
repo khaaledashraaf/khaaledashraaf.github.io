@@ -7,9 +7,9 @@ alwaysApply: true
 
 ## Infrastructure (Complete)
 
-- **Domain**: khaledashraf.me (custom domain via GitHub Pages)
+- **Domain**: khaledashraf.me (custom domain via Vercel)
 - **Email**: khaled@khaledashraf.me (Google Workspace with SPF/DKIM/DMARC)
-- **Hosting**: GitHub Pages with static export, auto-deploys on push to main
+- **Hosting**: Vercel, auto-deploys on push to main
 - **Analytics**: Google Analytics (G-LCV0P4FHDY) in layout.tsx
 - **Trust layer**: Email authentication fully configured, domain verified
 
