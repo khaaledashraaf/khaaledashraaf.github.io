@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { EmailCTA } from "@/components/email-cta";
 
 const currentTools = [
   { label: "Figma", color: "bg-[#a259ff]/10 text-[#a259ff] hover:bg-[#a259ff]/20" },
@@ -43,6 +44,8 @@ export function Hero() {
         Currently at <a href="https://www.linkedin.com/company/nooncom/"><span className="font-semibold text-foreground hover:underline">noon</span></a> — improving how
         designers and engineers collaborate.
       </p>
+
+      <EmailCTA />
 
       <div className="flex flex-col items-center gap-3">
         <p className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
