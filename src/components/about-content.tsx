@@ -34,7 +34,7 @@ const sentences2 = [
 
 export function AboutContent() {
   return (
-    <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center sm:pb-30">
+    <div className="relative z-10 min-h-[calc(100vh-10rem)] w-full flex flex-col items-center justify-center">
       <motion.video
         src="/heart.webm"
         autoPlay

@@ -8,15 +8,7 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <div className="flex flex-col items-center justify-center gap-6 min-h-screen pb-50">
-      <Image
-        className="grayscale contrast-150 dark:invert"
-        src="/character-lying-on-grass.gif"
-        alt="Coming soon"
-        width={420}
-        height={420}
-        unoptimized
-      />
+    <div className="flex min-h-[calc(100vh-15rem)] flex-col items-center justify-center gap-6">
       <p className="text-muted-foreground">No projects for now. Just chilling.</p>
     </div>
   );

@@ -10,6 +10,7 @@ const links = [
   { href: "/about", label: "About" },
   { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
+  { href: "/finds", label: "Finds" },
 ];
 
 export function Navbar() {
