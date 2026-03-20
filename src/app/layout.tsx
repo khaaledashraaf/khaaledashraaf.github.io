@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { AsciiBackground } from "@/components/ascii-background";
+import { SiteChrome } from "@/components/site-chrome";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
@@ -14,6 +13,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin"],
 });
 
@@ -53,19 +57,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
         >
-          <AsciiBackground />
           <Navbar />
-          <main className="relative z-10 mx-auto min-h-[calc(100vh-3.5rem)] max-w-4xl px-6 bg-white/40 dark:bg-transparent">
-            {children}
-          </main>
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
         </ThemeProvider>
         <GoogleAnalytics gaId="G-LCV0P4FHDY" />
       </body>

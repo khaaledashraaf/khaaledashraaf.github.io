@@ -3,8 +3,9 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -13,14 +14,14 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <Button variant="ghost" size="icon" className="h-8 w-8" />;
+    return <Button variant="ghost" size="icon" className={cn("h-8 w-8", className)} />;
   }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      className="h-8 w-8"
+      className={cn("h-8 w-8", className)}
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
       {theme === "dark" ? (
