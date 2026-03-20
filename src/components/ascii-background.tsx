@@ -256,7 +256,7 @@ export function AsciiBackground() {
           {frames.sun.length > 0 && (
             <pre
               ref={sunRef}
-              className="absolute right-4 top-[5rem] font-mono text-[10px] leading-tight text-amber-500/70 sm:text-xs"
+              className="absolute right-4 top-[5rem] font-mono text-[10px] leading-tight text-amber-500/70 sm:text-xs hidden sm:block"
               style={{
                 transform: "translateY(calc(var(--sy, 0) * -0.1px))",
               }}
@@ -303,7 +303,7 @@ export function AsciiBackground() {
       {isDark && (
         <>
           <div
-            className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+            className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300 hidden sm:block"
             style={{
               background:
                 "radial-gradient(100px at var(--mx, -100px) var(--my, -100px), rgba(255,255,255,0.04), transparent)",
@@ -314,7 +314,7 @@ export function AsciiBackground() {
           {frames.moon.length > 0 && (
             <pre
               ref={moonRef}
-              className="absolute left-4 top-[6rem] origin-top-left font-mono text-[10px] leading-tight text-foreground/40"
+              className="absolute left-4 top-[6rem] origin-top-left font-mono text-[10px] leading-tight text-foreground/40 sm:block hidden"
               style={{
                 transform:
                   "scale(2.5) translateY(calc(var(--sy, 0) * -0.1px))",
