@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "Portfolio Contact <onboarding@resend.dev>",
       to: "hi@khaledashraf.me",
       replyTo: email,
@@ -50,7 +50,16 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({ success: true });
+    if (error) {
+      console.error("Resend error:", error);
+      return NextResponse.json(
+        { error: error.message || "Failed to send email" },
+        { status: 500 }
+      );
+    }
+
+    console.log("Email sent successfully:", data);
+    return NextResponse.json({ success: true, id: data?.id });
   } catch (error) {
     console.error("Contact form error:", error);
     return NextResponse.json(
