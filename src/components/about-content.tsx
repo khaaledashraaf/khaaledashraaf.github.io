@@ -18,18 +18,18 @@ const item = {
 };
 
 const sentences = [
-  "25 years old from Alexandria, Egypt.",
-  "I studied computer engineering but I realized my passion was to create, design, and explore the world, so I shifted to product design.",
-  "Now I\u2019m back a full circle, bridging design and code to produce beautiful and functional products.",
+  "25 years old, from Alexandria, Egypt.",
+  "I studied computer engineering, but I realized my passion was to create, design, and explore the world, so I shifted to product design.",
+  "Now I\u2019ve come full circle, bridging design and code to produce beautiful and functional products.",
 ];
 
 const sentences2 = [
   <>
-    I believe that being a <strong>human </strong> is the most beautiful thing in
+    I believe that being <strong>human </strong> is the most beautiful thing in
     the world.
   </>,
-  "I long to feelings, love, pain, and everything in between.",
-  "In the weird times that we live in, I realized that it\u2019s more important than ever to explore what being a human is, and that\u2019s what I do these days.",
+  "I long for feelings, love, pain, and everything in between.",
+  "In the weird times we live in, I\u2019ve realized that it\u2019s more important than ever to explore what it means to be human\u2014and that\u2019s what I do these days.",
 ];
 
 export function AboutContent() {
