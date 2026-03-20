@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -7,11 +8,16 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <div className="flex flex-col gap-8 py-16 sm:py-24">
-      <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-      <p className="text-muted-foreground">
-        Coming soon — selected projects and case studies.
-      </p>
+    <div className="flex flex-col items-center justify-center gap-6">
+      <Image
+        className="grayscale contrast-150"
+        src="/character-lying-on-grass.gif"
+        alt="Coming soon"
+        width={420}
+        height={420}
+        unoptimized
+      />
+      <p className="text-muted-foreground">No projects for now. Just chilling.</p>
     </div>
   );
 }
