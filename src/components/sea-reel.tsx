@@ -57,7 +57,7 @@ export function SeaReel() {
         const prev = activeRef.current;
         if (prev) setTimeout(() => releaseVideo(prev), 1200);
       }, 200);
-    }, 5000);
+    }, 6000);
 
     return () => clearTimeout(timer);
   }, [index, showA, activeRef, nextRef, loadAndPlay]);
