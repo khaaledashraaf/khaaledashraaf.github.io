@@ -40,7 +40,7 @@ export function AboutContent() {
         loop
         muted
         playsInline
-        className="w-20 h-20 object-cover object-center invert"
+        className="w-20 h-20 object-cover object-center"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
