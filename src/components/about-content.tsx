@@ -34,36 +34,44 @@ const sentences2 = [
 
 export function AboutContent() {
   return (
-    <div className="relative z-10 min-h-[calc(100vh-10rem)] w-full flex flex-col items-center justify-center">
-      <motion.img
-        src="/animations/heart-alpha.apng"
-        alt=""
-        className="w-20 h-20 object-cover object-center"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      />
-      <motion.div
-        className="text-white/80 text-lg leading-relaxed text-justify sm:max-w-lg"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        {sentences.map((sentence, i) => (
-          <motion.span key={i} variants={item}>
-            {sentence}{" "}
-          </motion.span>
-        ))}
-        <motion.span variants={item}>
-          <br />
-          <br />
-        </motion.span>
-        {sentences2.map((sentence, i) => (
-          <motion.span key={i} variants={item}>
-            {sentence}{" "}
-          </motion.span>
-        ))}
-      </motion.div>
+    <div className="relative z-10">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center">
+        <motion.img
+          src="/animations/heart-alpha.apng"
+          alt=""
+          className="w-20 h-20 object-cover object-center"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        />
+        <motion.div
+          className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          {sentences.map((sentence, i) => (
+            <motion.span key={i} variants={item}>
+              {sentence}{" "}
+            </motion.span>
+          ))}
+        </motion.div>
+      </div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center">
+        <motion.div
+          className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg"
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
+          {sentences2.map((sentence, i) => (
+            <motion.span key={i} variants={item}>
+              {sentence}{" "}
+            </motion.span>
+          ))}
+        </motion.div>
+      </div>
     </div>
   );
 }
