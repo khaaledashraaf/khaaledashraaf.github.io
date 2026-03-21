@@ -36,16 +36,18 @@ export function AboutContent() {
   return (
     <div className="relative z-10 min-h-[calc(100vh-10rem)] w-full flex flex-col items-center justify-center">
       <motion.video
-        src="/heart.webm"
         autoPlay
         loop
         muted
         playsInline
-        className="w-20 h-20 object-cover object-center invert mix-blend-screen"
+        className="w-20 h-20 object-cover object-center invert"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-      />
+      >
+        <source src="/heart-alpha.mp4" type='video/mp4; codecs="hvc1"' />
+        <source src="/heart-alpha.webm" type="video/webm" />
+      </motion.video>
       <motion.div
         className="text-white/80 text-lg leading-relaxed text-justify sm:max-w-lg"
         variants={container}
