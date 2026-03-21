@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Find, FindType } from "@/content/finds";
-import { FindCard } from "./find-card";
+import { FindCard, type CardRect } from "./find-card";
+import { FindDetailOverlay } from "./find-detail";
 import { Badge } from "@/components/ui/badge";
 import {
   LayoutGrid,
@@ -103,6 +104,8 @@ function FindListItem({ find }: { find: Find }) {
 export function FindsGrid({ finds, types }: FindsGridProps) {
   const [activeType, setActiveType] = useState<FindType | null>(null);
   const [view, setView] = useState<ViewMode>("grid");
+  const [selectedFind, setSelectedFind] = useState<Find | null>(null);
+  const [selectedRect, setSelectedRect] = useState<CardRect | null>(null);
 
   const filtered = activeType
     ? finds.filter((f) => f.type === activeType)
@@ -165,8 +168,14 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
           animate="show"
         >
           {filtered.map((find) => (
-            <motion.div key={find.id} variants={item}>
-              <FindCard find={find} />
+            <motion.div
+              key={find.id}
+              variants={item}
+            >
+              <FindCard
+                find={find}
+                onInspect={find.featured ? (rect) => { setSelectedRect(rect); setSelectedFind(find); } : undefined}
+              />
             </motion.div>
           ))}
         </motion.div>
@@ -189,6 +198,17 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
       {filtered.length === 0 && (
         <p className="text-muted-foreground">No finds yet in this category.</p>
       )}
+
+      <AnimatePresence>
+        {selectedFind && selectedRect && (
+          <FindDetailOverlay
+            find={selectedFind}
+            allFinds={finds}
+            originRect={selectedRect}
+            onClose={() => { setSelectedFind(null); setSelectedRect(null); }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

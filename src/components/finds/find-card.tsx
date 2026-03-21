@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef } from "react";
+import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
 import { cn } from "@/lib/utils";
 import {
@@ -30,42 +34,75 @@ function getPriority(find: Find) {
   return priorityText[find.priority ?? 1];
 }
 
-function CardWrapper({
-  find,
-  className,
-  children,
-}: {
+export interface CardRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+interface CardWrapperProps {
   find: Find;
   className?: string;
   children: React.ReactNode;
-}) {
+  onInspect?: (rect: CardRect) => void;
+}
+
+function CardWrapper({ find, className, children, onInspect }: CardWrapperProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const p = find.priority ?? 1;
-  const Comp = find.sourceUrl ? "a" : "div";
+  const isFeatured = find.featured && onInspect;
+
+  const sharedClassName = cn(
+    "group relative block break-inside-avoid mb-4",
+    "rounded-2xl backdrop-blur-xl",
+    "bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.01]",
+    "shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(255,255,255,0.02)]",
+    "border border-white/40 dark:border-white/[0.08]",
+    "hover:shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03)]",
+    p === 3 && "column-span-all",
+    isFeatured && "cursor-pointer",
+    className
+  );
+
+  if (isFeatured) {
+    const handleClick = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      onInspect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    };
+    return (
+      <motion.div
+        ref={ref}
+        onClick={handleClick}
+        whileHover={{ y: -8 }}
+        transition={{ type: "tween", duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className={sharedClassName}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
+  const Comp = find.sourceUrl ? motion.a : motion.div;
   return (
     <Comp
       {...(find.sourceUrl
         ? { href: find.sourceUrl, target: "_blank", rel: "noopener noreferrer" }
         : {})}
-      className={cn(
-        "group relative block break-inside-avoid mb-4 transition-all duration-300 hover:-translate-y-1",
-        "rounded-2xl backdrop-blur-xl",
-        "bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.01]",
-        "shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(255,255,255,0.02)]",
-        "border border-white/40 dark:border-white/[0.08]",
-        "hover:shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03)]",
-        p === 3 && "column-span-all",
-        className
-      )}
+      whileHover={{ y: -8 }}
+      transition={{ type: "tween", duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className={sharedClassName}
     >
       {children}
     </Comp>
   );
 }
 
-function PoetryCard({ find }: { find: Find }) {
+function PoetryCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find}>
+    <CardWrapper find={find} onInspect={onInspect}>
       <div className="border-l-2 border-primary/40 pl-5 py-2">
         {find.excerpt && (
           <p className={cn("font-serif italic leading-relaxed text-foreground whitespace-pre-line", find.priority === 3 ? "text-2xl" : find.priority === 2 ? "text-xl" : "text-lg")}>
@@ -81,16 +118,16 @@ function PoetryCard({ find }: { find: Find }) {
   );
 }
 
-function MovieCard({ find }: { find: Find }) {
+function MovieCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="overflow-hidden">
+    <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
         <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/5]" : "aspect-[2/3]")}>
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -106,10 +143,10 @@ function MovieCard({ find }: { find: Find }) {
   );
 }
 
-function BookCard({ find }: { find: Find }) {
+function BookCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="bg-amber-100/20 dark:bg-amber-500/[0.04] p-4">
+    <CardWrapper find={find} onInspect={onInspect} className="bg-amber-100/20 dark:bg-amber-500/[0.04] p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <BookOpen className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Book</span>
@@ -123,15 +160,15 @@ function BookCard({ find }: { find: Find }) {
   );
 }
 
-function ReelCard({ find }: { find: Find }) {
+function ReelCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   return (
-    <CardWrapper find={find} className="overflow-hidden">
+    <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
         <div className="relative aspect-video w-full overflow-hidden">
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black">
@@ -148,11 +185,11 @@ function ReelCard({ find }: { find: Find }) {
   );
 }
 
-function ArticleCard({ find }: { find: Find }) {
+function ArticleCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   const hasCover = find.coverVideoUrl || find.imageUrl;
   return (
-    <CardWrapper find={find} className={cn("overflow-hidden", !hasCover && "p-4")}>
+    <CardWrapper find={find} onInspect={onInspect} className={cn("overflow-hidden", !hasCover && "p-4")}>
       {find.coverVideoUrl && (
         <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/4]" : "aspect-video")}>
           <iframe
@@ -168,7 +205,7 @@ function ArticleCard({ find }: { find: Find }) {
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -192,10 +229,10 @@ function ArticleCard({ find }: { find: Find }) {
   );
 }
 
-function MusicCard({ find }: { find: Find }) {
+function MusicCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="bg-violet-100/20 dark:bg-violet-500/[0.04] p-4">
+    <CardWrapper find={find} onInspect={onInspect} className="bg-violet-100/20 dark:bg-violet-500/[0.04] p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Music className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Music</span>
@@ -209,15 +246,15 @@ function MusicCard({ find }: { find: Find }) {
   );
 }
 
-function ImageCard({ find }: { find: Find }) {
+function ImageCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   return (
-    <CardWrapper find={find} className="overflow-hidden">
+    <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
         <div className="relative w-full overflow-hidden">
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12">
             <h3 className="font-semibold text-white">{find.title}</h3>
@@ -229,16 +266,16 @@ function ImageCard({ find }: { find: Find }) {
   );
 }
 
-function ToolCard({ find }: { find: Find }) {
+function ToolCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="bg-emerald-100/20 dark:bg-emerald-500/[0.04] overflow-hidden">
+    <CardWrapper find={find} onInspect={onInspect} className="bg-emerald-100/20 dark:bg-emerald-500/[0.04] overflow-hidden">
       {find.imageUrl && (
         <div className="aspect-video w-full overflow-hidden">
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -257,17 +294,17 @@ function ToolCard({ find }: { find: Find }) {
   );
 }
 
-function PeopleCard({ find }: { find: Find }) {
+function PeopleCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   const hasCover = find.imageUrl;
   return (
-    <CardWrapper find={find} className={cn("overflow-hidden", !hasCover && "p-4")}>
+    <CardWrapper find={find} onInspect={onInspect} className={cn("overflow-hidden", !hasCover && "p-4")}>
       {find.imageUrl && (
         <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/2]" : "aspect-video")}>
           <img
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -283,10 +320,10 @@ function PeopleCard({ find }: { find: Find }) {
   );
 }
 
-function OtherCard({ find }: { find: Find }) {
+function OtherCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="p-4">
+    <CardWrapper find={find} onInspect={onInspect} className="p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Sparkles className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Find</span>
@@ -297,7 +334,7 @@ function OtherCard({ find }: { find: Find }) {
   );
 }
 
-const cardMap: Record<Find["type"], React.FC<{ find: Find }>> = {
+const cardMap: Record<Find["type"], React.FC<{ find: Find; onInspect?: (rect: CardRect) => void }>> = {
   movie: MovieCard,
   book: BookCard,
   reel: ReelCard,
@@ -310,7 +347,7 @@ const cardMap: Record<Find["type"], React.FC<{ find: Find }>> = {
   other: OtherCard,
 };
 
-export function FindCard({ find }: { find: Find }) {
+export function FindCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect) => void }) {
   const Card = cardMap[find.type];
-  return <Card find={find} />;
+  return <Card find={find} onInspect={onInspect} />;
 }

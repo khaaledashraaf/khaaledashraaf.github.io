@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       { hostname: "res.cloudinary.com" },
       { hostname: "storage.icograms.com" },
       { hostname: "invention.si.edu" },
+      { hostname: "www.mac-history.net" },
     ],
   },
 };

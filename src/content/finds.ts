@@ -22,6 +22,8 @@ export interface Find {
   excerpt?: string;
   coverVideoUrl?: string;
   priority?: 1 | 2 | 3;
+  featured?: boolean;
+  expandedNote?: string;
 }
 
 export const finds: Find[] = [
@@ -33,7 +35,7 @@ export const finds: Find[] = [
     sourceUrl: "https://www.imdb.com/title/tt0120689/",
     imageUrl: "https://m.media-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1_.jpg",
     dateAdded: "2026-03-21",
-    priority: 2,
+    priority: 1,
   },
   {
     id: "2",
@@ -54,6 +56,8 @@ export const finds: Find[] = [
     coverVideoUrl: "https://player.vimeo.com/video/1145294479?h=31e2e3eece&title=0&byline=0&portrait=0&keyboard=0&muted=1&autoplay=1&autopause=0&controls=0&dnt=1&loop=1&background=1&quality=240p&app_id=122963&unmute_button=0&initial_quality=240p",
     dateAdded: "2026-03-21",
     priority: 3,
+    featured: true,
+    expandedNote: "This piece by Figma traces the most iconic interactions of the past century — from the first GUI to the iPhone's pinch-to-zoom. Each interaction is illustrated with gorgeous art that makes you want to linger. It's a love letter to the designers and engineers who shaped how we touch screens, click buttons, and navigate the digital world. The article argues that software isn't just a tool — it's culture, shaped by and shaping the people who use it.",
   },
   {
     id: "4",
@@ -69,10 +73,12 @@ export const finds: Find[] = [
     id: "5",
     title: "Susan Kare",
     type: "people",
-    note: "The iconographer who designed the first icons for Apple's Mac — making computers feel friendly and human. Her presentation is a joy to watch. She even mentioned a book called \"Understanding Comics: The Invisible Art\" which went straight to my read list.",
+    note: 'Known as "The woman who gave Macintosh a smile", she was the pioneering designer working with Apple in the early 1980s to create the visual language of the first Macintosh. She designed some famous pixel-arts like "Happy Mac", the Command key symbol (⌘), and the "hello" text animation you see when you use a new Apple product.',
     sourceUrl: "https://vimeo.com/97583369",
-    imageUrl: "https://invention.si.edu/sites/default/files/styles/670h/public/inventors-kare-susan-appleteam-susankare-color13-330dpi-cnormaseeff-banner-edit.jpg?itok=38dVfTtz",
+    imageUrl: "https://www.mac-history.net/wp-content/uploads/2022/12/Susan-Kare.jpg",
     dateAdded: "2026-03-21",
     priority: 3,
+    featured: true,
+    expandedNote: "Susan Kare is the iconographer who designed the first icons for Apple's Mac — making computers feel friendly and human. Working with Steve Jobs in the early 1980s, she created pixel-perfect icons on a 32×32 grid that became the visual language of personal computing: the Happy Mac, the paintbrush, the trash can, the command key symbol (⌘). Her presentation is a joy to watch — she walks through her process with warmth and humor. She even mentioned a book called \"Understanding Comics: The Invisible Art\" by Scott McCloud, which went straight to my read list. What strikes me most is how she proved that constraints (tiny grids, limited pixels) don't limit creativity — they focus it.",
   },
 ];
