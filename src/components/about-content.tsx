@@ -36,7 +36,7 @@ export function AboutContent() {
   return (
     <div className="relative z-10 min-h-[calc(100vh-10rem)] w-full flex flex-col items-center justify-center">
       <motion.img
-        src="/heart-alpha.apng"
+        src="/animations/heart-alpha.apng"
         alt=""
         className="w-20 h-20 object-cover object-center"
         initial={{ opacity: 0, scale: 0.5 }}

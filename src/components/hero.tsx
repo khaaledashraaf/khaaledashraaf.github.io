@@ -18,7 +18,7 @@ export function Hero() {
     <section className="flex flex-col items-center gap-8 py-16 sm:py-24">
       <div className="flex flex-col items-center gap-4">
         <Image
-          src="/header.svg"
+          src="/svg/header.svg"
           alt="Khaled Ashraf"
           width={549}
           height={84}
@@ -26,7 +26,7 @@ export function Hero() {
           className="dark:invert w-full max-w-[550px] hidden md:block"
         />
         <Image
-          src="/header-mobile.svg"
+          src="/svg/header-mobile.svg"
           alt="Khaled Ashraf"
           width={270}
           height={230}

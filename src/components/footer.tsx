@@ -22,7 +22,7 @@ export function Footer({ showArt = true, light = false }: { showArt?: boolean; l
       {showArt && (
         <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
           <video
-            src="/character-lying-on-grass.webm"
+            src="/animations/character-lying-on-grass.webm"
             autoPlay
             loop
             muted
