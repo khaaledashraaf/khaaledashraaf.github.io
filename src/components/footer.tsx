@@ -1,11 +1,9 @@
 import Image from "next/image";
-import { Separator } from "@/components/ui/separator";
 
-export function Footer({ showArt = true, light = false }: { showArt?: boolean; light?: boolean }) {
+export function Footer({ light = false, showAscii = true }: { light?: boolean; showAscii?: boolean }) {
   return (
     <footer className="relative">
-      {/* ASCII art - decorative, does not affect layout */}
-      {showArt && (
+      {showAscii && (
         <div className="absolute bottom-0 left-0 right-0 z-0 pointer-events-none hidden md:block">
           <Image
             src="/ascii/footer.svg"
@@ -17,22 +15,6 @@ export function Footer({ showArt = true, light = false }: { showArt?: boolean; l
           />
         </div>
       )}
-
-      {/* Character animation - centered, decorative */}
-      {showArt && (
-        <div className="sm:absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
-          <video
-            src="/animations/character-lying-on-grass.webm"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-64 md:w-80 dark:invert opacity-80"
-          />
-        </div>
-      )}
-
-      {/* Footer content */}
       <div className="relative z-10 py-8">
         <div className="mx-auto w-full max-w-4xl px-6">
           <div className={`flex flex-col items-center justify-between gap-4 text-sm sm:flex-row ${light ? "text-white/60" : "text-foreground/80"}`}>

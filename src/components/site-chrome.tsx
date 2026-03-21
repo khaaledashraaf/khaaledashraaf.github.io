@@ -3,12 +3,14 @@
 import { usePathname } from "next/navigation";
 import { AsciiBackground } from "./ascii-background";
 import { Footer } from "./footer";
+import { LyingCharacter } from "./lying-character";
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAbout = pathname === "/about";
   const isFinds = pathname.startsWith("/finds");
-  const showFooterArt = !isAbout && !isFinds;
+  const showFooterExtras = !isAbout && !isFinds;
+  const isProjects = pathname === "/projects";
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
@@ -18,7 +20,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      <Footer showArt={showFooterArt} light={isAbout} />
+      {showFooterExtras && <LyingCharacter className={isProjects ? "hidden sm:flex" : ""} />}
+      <Footer light={isAbout} showAscii={showFooterExtras} />
     </div>
   );
 }

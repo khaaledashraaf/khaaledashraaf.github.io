@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { LyingCharacter } from "@/components/lying-character";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export default function ProjectsPage() {
   return (
     <div className="flex min-h-[calc(100vh-15rem)] flex-col items-center justify-center gap-6">
+      <LyingCharacter className="sm:hidden" />
       <p className="text-muted-foreground">No projects for now. Just chilling.</p>
     </div>
   );
