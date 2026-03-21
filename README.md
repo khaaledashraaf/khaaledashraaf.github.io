@@ -1,38 +1,20 @@
-# khaaledashraaf.github.io
+# khaledashraf.me
 
-Personal portfolio website built with Next.js, Tailwind CSS, and shadcn/ui.
+My personal corner of the internet. I'm Khaled — a product designer and computer engineer from Alexandria, Egypt, bridging design and code to make beautiful, functional things.
+
+This portfolio is built and designed by me, from scratch. No templates.
+
+## What's here
+
+- **About** — who I am and what I care about
+- **Finds** — movies, books, music, poetry, and other things I find on the internet that move me
+- **Blog** — writing on design, engineering, and everything in between
 
 ## Stack
 
-- **Next.js 16** — Static export for GitHub Pages
-- **Tailwind CSS v4** — Styling
-- **shadcn/ui** — Component library
-- **Markdown/MDX** — Blog posts
-
-## Development
-
-```bash
-npm run dev
-```
-
-## Blog
-
-Add new posts as `.mdx` files in `src/content/blog/`:
-
-```mdx
----
-title: "Post Title"
-date: "2026-03-06"
-description: "A short description."
----
-
-Your content here.
-```
-
-## Build
-
-```bash
-npm run build
-```
-
-Static output goes to `./out`. Deployed automatically via GitHub Actions on push to `main`.
+- Next.js 16
+- Tailwind CSS v4
+- Framer Motion
+- shadcn/ui
+- MDX for blog posts
+- Hosted on Vercel
