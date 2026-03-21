@@ -6,6 +6,8 @@ export type FindType =
   | "article"
   | "music"
   | "image"
+  | "tool"
+  | "people"
   | "other";
 
 export interface Find {
@@ -18,110 +20,59 @@ export interface Find {
   dateAdded: string;
   author?: string;
   excerpt?: string;
+  coverVideoUrl?: string;
+  priority?: 1 | 2 | 3;
 }
 
 export const finds: Find[] = [
   {
     id: "1",
-    title: "Paterson",
+    title: "The Green Mile",
     type: "movie",
-    note: "A quiet film about a bus driver who writes poetry. It reminded me that art lives in the ordinary.",
-    sourceUrl: "https://www.imdb.com/title/tt5247022/",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BMTUzNDkzMDAzOF5BMl5BanBnXkFtZTgwMTQ4MTMwMTI@._V1_.jpg",
-    dateAdded: "2026-03-15",
+    note: "John Coffey feeling all the pain in the world and still choosing to give it love.",
+    sourceUrl: "https://www.imdb.com/title/tt0120689/",
+    imageUrl: "https://m.media-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1_.jpg",
+    dateAdded: "2026-03-21",
+    priority: 2,
   },
   {
     id: "2",
-    title: "When Breath Becomes Air",
-    type: "book",
-    note: "Paul Kalanithi's memoir on mortality. Changed how I think about time.",
-    author: "Paul Kalanithi",
-    dateAdded: "2026-02-20",
+    title: "FIGlet",
+    type: "tool",
+    note: "The origin of ASCII art on the internet. Glenn Chappell built it in 1991, and by the 2000s it had 400+ community-made fonts. A little piece of internet history.",
+    sourceUrl: "https://www.figlet.org/",
+    imageUrl: "https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,w_240/https%3A%2F%2Fdashboard.snapcraft.io%2Fsite_media%2Fappmedia%2F2019%2F02%2FFIG.png",
+    dateAdded: "2026-03-21",
   },
   {
     id: "3",
-    title: "The Summer Day",
-    type: "poetry",
-    note: "The last two lines live rent-free in my head.",
-    author: "Mary Oliver",
-    excerpt: "Tell me, what is it you plan to do\nwith your one wild and precious life?",
-    dateAdded: "2026-03-01",
+    title: "Software is Culture",
+    type: "article",
+    note: "A gallery of iconic interactions from the past century that shaped how we use digital products. The art alone is worth the visit.",
+    author: "Figma",
+    sourceUrl: "https://www.figma.com/blog/software-is-culture/",
+    coverVideoUrl: "https://player.vimeo.com/video/1145294479?h=31e2e3eece&title=0&byline=0&portrait=0&keyboard=0&muted=1&autoplay=1&autopause=0&controls=0&dnt=1&loop=1&background=1&quality=240p&app_id=122963&unmute_button=0&initial_quality=240p",
+    dateAdded: "2026-03-21",
+    priority: 3,
   },
   {
     id: "4",
-    title: "A Message From the Future",
-    type: "reel",
-    note: "Beautifully illustrated short about the Green New Deal. Art meets activism.",
-    sourceUrl: "https://www.youtube.com/watch?v=d9uTH0iGdc0",
-    imageUrl: "https://img.youtube.com/vi/d9uTH0iGdc0/hqdefault.jpg",
-    dateAdded: "2026-01-10",
+    title: "Icograms",
+    type: "tool",
+    note: "An online tool with a vast library of isometric illustrations. Very useful for creating maps and diagrams.",
+    sourceUrl: "https://icograms.com/",
+    imageUrl: "https://storage.icograms.com/templates/thumbnails/map-urban-rural-areas.png",
+    dateAdded: "2026-03-21",
+    priority: 2,
   },
   {
     id: "5",
-    title: "The Expanding Dark Forest and Generative AI",
-    type: "article",
-    note: "Maggie Appleton's essay on how AI changes the web. Prescient and beautifully written.",
-    author: "Maggie Appleton",
-    sourceUrl: "https://maggieappleton.com/ai-dark-forest",
-    dateAdded: "2026-02-05",
-  },
-  {
-    id: "6",
-    title: "Nattoppet",
-    type: "music",
-    note: "Ambient Swedish piece that feels like a late-night walk in winter.",
-    sourceUrl: "https://open.spotify.com/track/3m8tGiGHmeVGMUbOQn8FaD",
-    dateAdded: "2026-03-10",
-  },
-  {
-    id: "7",
-    title: "Earthrise",
-    type: "image",
-    note: "The photo that changed how humanity sees itself. Taken by William Anders, Apollo 8.",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/NASA-Apollo8-Dec24-Earthrise.jpg/1280px-NASA-Apollo8-Dec24-Earthrise.jpg",
-    dateAdded: "2025-12-24",
-  },
-  {
-    id: "8",
-    title: "The Boy, the Mole, the Fox and the Horse",
-    type: "book",
-    note: "Simple drawings, profound truths. 'What is the bravest thing you've ever said? Help.'",
-    author: "Charlie Mackesy",
-    dateAdded: "2026-01-28",
-  },
-  {
-    id: "9",
-    title: "Severance",
-    type: "movie",
-    note: "What if you could split your work self from your personal self? A masterclass in tension.",
-    sourceUrl: "https://www.imdb.com/title/tt11280740/",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BMjkwZjcwMGQtNDAzOC00YjJiLThiYTgtNWU3ZjRiMDdhMThiXkEyXkFqcGc@._V1_.jpg",
-    dateAdded: "2026-02-15",
-  },
-  {
-    id: "10",
-    title: "Wild Geese",
-    type: "poetry",
-    note: "Permission to be imperfect. I return to this whenever I feel lost.",
-    author: "Mary Oliver",
-    excerpt: "You do not have to be good.\nYou do not have to walk on your knees\nfor a hundred miles through the desert, repenting.",
-    dateAdded: "2026-03-18",
-  },
-  {
-    id: "11",
-    title: "How to Do Nothing",
-    type: "book",
-    note: "Jenny Odell's argument for attention as resistance. Made me rethink productivity.",
-    author: "Jenny Odell",
-    dateAdded: "2026-01-05",
-  },
-  {
-    id: "12",
-    title: "Life in a Day",
-    type: "reel",
-    note: "Crowdsourced documentary of a single day on Earth. Deeply moving.",
-    sourceUrl: "https://www.youtube.com/watch?v=JaFVr_cJJIY",
-    imageUrl: "https://img.youtube.com/vi/JaFVr_cJJIY/hqdefault.jpg",
-    dateAdded: "2026-02-28",
+    title: "Susan Kare",
+    type: "people",
+    note: "The iconographer who designed the first icons for Apple's Mac — making computers feel friendly and human. Her presentation is a joy to watch. She even mentioned a book called \"Understanding Comics: The Invisible Art\" which went straight to my read list.",
+    sourceUrl: "https://vimeo.com/97583369",
+    imageUrl: "https://invention.si.edu/sites/default/files/styles/670h/public/inventors-kare-susan-appleteam-susankare-color13-330dpi-cnormaseeff-banner-edit.jpg?itok=38dVfTtz",
+    dateAdded: "2026-03-21",
+    priority: 3,
   },
 ];

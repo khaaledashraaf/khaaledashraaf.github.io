@@ -23,6 +23,8 @@ The user will describe the find casually — e.g. "I just watched Interstellar a
    - `"article"` — blog posts, essays, newsletters
    - `"music"` — songs, albums, playlists, podcasts
    - `"image"` — photographs, art, illustrations
+   - `"tool"` — websites, apps, utilities, developer tools, online tools
+   - `"people"` — inspiring individuals, designers, engineers, artists, thinkers
    - `"other"` — anything that doesn't fit above
 
    If ambiguous, ask the user.

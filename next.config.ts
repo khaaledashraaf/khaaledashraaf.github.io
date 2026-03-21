@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
       { hostname: "m.media-amazon.com" },
       { hostname: "img.youtube.com" },
       { hostname: "upload.wikimedia.org" },
+      { hostname: "res.cloudinary.com" },
+      { hostname: "storage.icograms.com" },
+      { hostname: "invention.si.edu" },
     ],
   },
 };

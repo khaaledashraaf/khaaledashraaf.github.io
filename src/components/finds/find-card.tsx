@@ -8,6 +8,8 @@ import {
   Music,
   ImageIcon,
   Sparkles,
+  Wrench,
+  User,
 } from "lucide-react";
 
 function extractDomain(url: string): string {
@@ -16,6 +18,16 @@ function extractDomain(url: string): string {
   } catch {
     return url;
   }
+}
+
+const priorityText: Record<number, { title: string; body: string }> = {
+  1: { title: "text-base", body: "text-sm" },
+  2: { title: "text-lg", body: "text-base" },
+  3: { title: "text-xl", body: "text-base" },
+};
+
+function getPriority(find: Find) {
+  return priorityText[find.priority ?? 1];
 }
 
 function CardWrapper({
@@ -27,6 +39,7 @@ function CardWrapper({
   className?: string;
   children: React.ReactNode;
 }) {
+  const p = find.priority ?? 1;
   const Comp = find.sourceUrl ? "a" : "div";
   return (
     <Comp
@@ -34,7 +47,13 @@ function CardWrapper({
         ? { href: find.sourceUrl, target: "_blank", rel: "noopener noreferrer" }
         : {})}
       className={cn(
-        "group block break-inside-avoid mb-4 transition-transform duration-200 hover:-translate-y-0.5",
+        "group relative block break-inside-avoid mb-4 transition-all duration-300 hover:-translate-y-1",
+        "rounded-2xl backdrop-blur-xl",
+        "bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.01]",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(255,255,255,0.02)]",
+        "border border-white/40 dark:border-white/[0.08]",
+        "hover:shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03)]",
+        p === 3 && "column-span-all",
         className
       )}
     >
@@ -44,28 +63,30 @@ function CardWrapper({
 }
 
 function PoetryCard({ find }: { find: Find }) {
+  const s = getPriority(find);
   return (
     <CardWrapper find={find}>
       <div className="border-l-2 border-primary/40 pl-5 py-2">
         {find.excerpt && (
-          <p className="font-serif text-lg italic leading-relaxed text-foreground whitespace-pre-line">
+          <p className={cn("font-serif italic leading-relaxed text-foreground whitespace-pre-line", find.priority === 3 ? "text-2xl" : find.priority === 2 ? "text-xl" : "text-lg")}>
             {find.excerpt}
           </p>
         )}
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className={cn("mt-3 text-muted-foreground", s.body)}>
           — {find.author ?? find.title}
         </p>
-        <p className="mt-2 text-sm text-muted-foreground/70">{find.note}</p>
+        <p className={cn("mt-2 text-muted-foreground/70", s.body)}>{find.note}</p>
       </div>
     </CardWrapper>
   );
 }
 
 function MovieCard({ find }: { find: Find }) {
+  const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="rounded-xl overflow-hidden bg-muted/40 border border-border/50">
+    <CardWrapper find={find} className="overflow-hidden">
       {find.imageUrl && (
-        <div className="relative aspect-[2/3] w-full overflow-hidden">
+        <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/5]" : "aspect-[2/3]")}>
           <img
             src={find.imageUrl}
             alt={find.title}
@@ -78,32 +99,33 @@ function MovieCard({ find }: { find: Find }) {
           <Film className="h-3.5 w-3.5" />
           <span className="text-xs uppercase tracking-wider">Movie</span>
         </div>
-        <h3 className="font-semibold text-foreground">{find.title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{find.note}</p>
+        <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
+        <p className={cn("mt-1 text-muted-foreground", s.body)}>{find.note}</p>
       </div>
     </CardWrapper>
   );
 }
 
 function BookCard({ find }: { find: Find }) {
+  const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/30 dark:border-amber-800/20 p-5">
+    <CardWrapper find={find} className="bg-amber-100/20 dark:bg-amber-500/[0.04] p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <BookOpen className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Book</span>
       </div>
-      <h3 className="font-semibold text-foreground">{find.title}</h3>
+      <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
       {find.author && (
-        <p className="text-sm text-muted-foreground">by {find.author}</p>
+        <p className={cn("text-muted-foreground", s.body)}>by {find.author}</p>
       )}
-      <p className="mt-2 text-sm text-muted-foreground/80">{find.note}</p>
+      <p className={cn("mt-2 text-muted-foreground/80", s.body)}>{find.note}</p>
     </CardWrapper>
   );
 }
 
 function ReelCard({ find }: { find: Find }) {
   return (
-    <CardWrapper find={find} className="rounded-xl overflow-hidden bg-muted/40 border border-border/50">
+    <CardWrapper find={find} className="overflow-hidden">
       {find.imageUrl && (
         <div className="relative aspect-video w-full overflow-hidden">
           <img
@@ -127,44 +149,69 @@ function ReelCard({ find }: { find: Find }) {
 }
 
 function ArticleCard({ find }: { find: Find }) {
+  const s = getPriority(find);
+  const hasCover = find.coverVideoUrl || find.imageUrl;
   return (
-    <CardWrapper find={find} className="rounded-xl border border-border/50 p-5">
-      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-        <FileText className="h-3.5 w-3.5" />
-        {find.sourceUrl && (
-          <span className="text-xs">{extractDomain(find.sourceUrl)}</span>
-        )}
-      </div>
-      <h3 className="font-semibold text-foreground group-hover:underline">
-        {find.title}
-      </h3>
-      {find.author && (
-        <p className="text-sm text-muted-foreground">by {find.author}</p>
+    <CardWrapper find={find} className={cn("overflow-hidden", !hasCover && "p-4")}>
+      {find.coverVideoUrl && (
+        <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/4]" : "aspect-video")}>
+          <iframe
+            src={find.coverVideoUrl}
+            className="absolute inset-0 h-full w-full scale-[1.5] pointer-events-none"
+            allow="autoplay"
+            title={find.title}
+          />
+        </div>
       )}
-      <p className="mt-2 text-sm text-muted-foreground/80">{find.note}</p>
+      {!find.coverVideoUrl && find.imageUrl && (
+        <div className="relative aspect-video w-full overflow-hidden">
+          <img
+            src={find.imageUrl}
+            alt={find.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+      )}
+      <div className={hasCover ? "p-4" : ""}>
+        <div className="flex items-center gap-2 text-muted-foreground mb-2">
+          <FileText className="h-3.5 w-3.5" />
+          <span className="text-xs uppercase tracking-wider">Article</span>
+          {find.sourceUrl && (
+            <span className="text-xs ml-auto">{extractDomain(find.sourceUrl)}</span>
+          )}
+        </div>
+        <h3 className={cn("font-semibold text-foreground group-hover:underline", s.title)}>
+          {find.title}
+        </h3>
+        {find.author && (
+          <p className={cn("text-muted-foreground", s.body)}>by {find.author}</p>
+        )}
+        <p className={cn("mt-2 text-muted-foreground/80", s.body)}>{find.note}</p>
+      </div>
     </CardWrapper>
   );
 }
 
 function MusicCard({ find }: { find: Find }) {
+  const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="rounded-xl bg-gradient-to-br from-violet-50/50 to-fuchsia-50/50 dark:from-violet-950/10 dark:to-fuchsia-950/10 border border-violet-200/30 dark:border-violet-800/20 p-5">
+    <CardWrapper find={find} className="bg-violet-100/20 dark:bg-violet-500/[0.04] p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Music className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Music</span>
       </div>
-      <h3 className="font-semibold text-foreground">{find.title}</h3>
+      <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
       {find.author && (
-        <p className="text-sm text-muted-foreground">by {find.author}</p>
+        <p className={cn("text-muted-foreground", s.body)}>by {find.author}</p>
       )}
-      <p className="mt-2 text-sm text-muted-foreground/80">{find.note}</p>
+      <p className={cn("mt-2 text-muted-foreground/80", s.body)}>{find.note}</p>
     </CardWrapper>
   );
 }
 
 function ImageCard({ find }: { find: Find }) {
   return (
-    <CardWrapper find={find} className="rounded-xl overflow-hidden">
+    <CardWrapper find={find} className="overflow-hidden">
       {find.imageUrl && (
         <div className="relative w-full overflow-hidden">
           <img
@@ -182,15 +229,70 @@ function ImageCard({ find }: { find: Find }) {
   );
 }
 
-function OtherCard({ find }: { find: Find }) {
+function ToolCard({ find }: { find: Find }) {
+  const s = getPriority(find);
   return (
-    <CardWrapper find={find} className="rounded-xl border border-border/50 bg-muted/30 p-5">
+    <CardWrapper find={find} className="bg-emerald-100/20 dark:bg-emerald-500/[0.04] overflow-hidden">
+      {find.imageUrl && (
+        <div className="aspect-video w-full overflow-hidden">
+          <img
+            src={find.imageUrl}
+            alt={find.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+      )}
+      <div className="p-4">
+        <div className="flex items-center gap-2 text-muted-foreground mb-2">
+          <Wrench className="h-3.5 w-3.5" />
+          <span className="text-xs uppercase tracking-wider">Tool</span>
+          {find.sourceUrl && (
+            <span className="text-xs ml-auto">{extractDomain(find.sourceUrl)}</span>
+          )}
+        </div>
+        <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
+        <p className={cn("mt-2 text-muted-foreground/80", s.body)}>{find.note}</p>
+      </div>
+    </CardWrapper>
+  );
+}
+
+function PeopleCard({ find }: { find: Find }) {
+  const s = getPriority(find);
+  const hasCover = find.imageUrl;
+  return (
+    <CardWrapper find={find} className={cn("overflow-hidden", !hasCover && "p-4")}>
+      {find.imageUrl && (
+        <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/2]" : "aspect-video")}>
+          <img
+            src={find.imageUrl}
+            alt={find.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+      )}
+      <div className="p-4">
+        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <User className="h-3.5 w-3.5" />
+          <span className="text-xs uppercase tracking-wider">Person</span>
+        </div>
+        <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
+        <p className={cn("mt-1 text-muted-foreground", s.body)}>{find.note}</p>
+      </div>
+    </CardWrapper>
+  );
+}
+
+function OtherCard({ find }: { find: Find }) {
+  const s = getPriority(find);
+  return (
+    <CardWrapper find={find} className="p-4">
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Sparkles className="h-3.5 w-3.5" />
         <span className="text-xs uppercase tracking-wider">Find</span>
       </div>
-      <h3 className="font-semibold text-foreground">{find.title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground/80">{find.note}</p>
+      <h3 className={cn("font-semibold text-foreground", s.title)}>{find.title}</h3>
+      <p className={cn("mt-2 text-muted-foreground/80", s.body)}>{find.note}</p>
     </CardWrapper>
   );
 }
@@ -203,6 +305,8 @@ const cardMap: Record<Find["type"], React.FC<{ find: Find }>> = {
   article: ArticleCard,
   music: MusicCard,
   image: ImageCard,
+  tool: ToolCard,
+  people: PeopleCard,
   other: OtherCard,
 };
 

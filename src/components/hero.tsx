@@ -34,7 +34,7 @@ export function Hero() {
           className="dark:invert w-full max-w-[270px] block md:hidden"
         />
         <p className="text-sm leading-relaxed text-muted-foreground sm:text-base text-center">
-          Product Designer with a background in Computer Engineering.
+          Design Engineer.
           <br />
           Building at the intersection of design tools and code.
         </p>
@@ -44,9 +44,7 @@ export function Hero() {
         Currently at <a href="https://www.linkedin.com/company/nooncom/"><span className="font-semibold text-foreground hover:underline">noon</span></a> — improving how
         designers and engineers collaborate.
       </p>
-
-      <EmailCTA />
-
+      
       <div className="flex flex-col items-center gap-3">
         <p className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Working with
@@ -59,6 +57,10 @@ export function Hero() {
           ))}
         </div>
       </div>
+
+      <EmailCTA />
+
+      
     </section>
   );
 }

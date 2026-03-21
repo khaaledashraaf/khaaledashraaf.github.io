@@ -3,7 +3,7 @@
     .char {
       font-family: 'Courier New', Courier, monospace;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       fill: #24292f;
       transform-box: fill-box;
       animation: wave 1.3s ease-in-out infinite;
