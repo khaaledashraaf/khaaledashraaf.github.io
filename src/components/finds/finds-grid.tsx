@@ -130,7 +130,7 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 border border-border/50 rounded-lg p-0.5 bg-white">
+        <div className="flex items-center gap-1 border border-border/50 rounded-lg p-0.5 bg-white dark:bg-black">
           <button
             onClick={() => setView("grid")}
             className={cn(
