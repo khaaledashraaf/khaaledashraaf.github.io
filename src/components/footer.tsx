@@ -20,7 +20,7 @@ export function Footer({ showArt = true, light = false }: { showArt?: boolean; l
 
       {/* Character animation - centered, decorative */}
       {showArt && (
-        <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
+        <div className="sm:absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
           <video
             src="/animations/character-lying-on-grass.webm"
             autoPlay
