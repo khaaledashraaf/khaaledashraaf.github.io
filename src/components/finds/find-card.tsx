@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
 import { cn } from "@/lib/utils";
+import { FeaturedSticker } from "./pixel-stickers";
 import {
   Film,
   BookOpen,
@@ -72,10 +73,24 @@ function CardWrapper({ find, className, children, isSelected, onInspect }: CardW
         onClick={onInspect}
         whileHover={{ y: -8 }}
         transition={{ type: "tween", duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className={sharedClassName}
+        className={cn(
+          "group relative block break-inside-avoid mb-4 cursor-pointer overflow-visible",
+          p === 3 && "column-span-all",
+          isSelected && "invisible",
+        )}
       >
-        {children}
-        {submittedByTag}
+        {find.sticker && <FeaturedSticker findId={find.id} stickerType={find.sticker} />}
+        <div className={cn(
+          "rounded-2xl backdrop-blur-xl overflow-hidden",
+          "bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.01]",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(255,255,255,0.02)]",
+          "border border-white/40 dark:border-white/[0.08]",
+          "hover:shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03)]",
+          className
+        )}>
+          {children}
+          {submittedByTag}
+        </div>
       </motion.div>
     );
   }
