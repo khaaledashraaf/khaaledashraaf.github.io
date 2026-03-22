@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       { hostname: "www.cnet.com" },
       { hostname: "i.pinimg.com" },
       { hostname: "pbs.twimg.com" },
+      { hostname: "cdn.sanity.io" },
     ],
   },
 };

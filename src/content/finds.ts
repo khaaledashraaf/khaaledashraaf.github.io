@@ -57,11 +57,12 @@ export const finds: Find[] = [
     note: "A gallery of iconic interactions from the past century that shaped how we use digital products. The art alone is worth the visit.",
     author: "Figma",
     sourceUrl: "https://www.figma.com/blog/software-is-culture/",
-    coverVideoUrl: "https://player.vimeo.com/video/1145294479?h=31e2e3eece&title=0&byline=0&portrait=0&keyboard=0&muted=1&autoplay=1&autopause=0&controls=0&dnt=1&loop=1&background=1&quality=240p&app_id=122963&unmute_button=0&initial_quality=240p",
+    imageUrl: "https://cdn.sanity.io/images/599r6htc/regionalized/96aaa8eba5993fc239a471a660a01c172f9bef7c-1920x1080.jpg?w=1200&q=70&fit=max&auto=format",
     dateAdded: "2026-03-21",
     priority: 3,
     featured: true,
     expandedNote: "This piece by Figma traces the most iconic interactions of the past century — from the first GUI to the iPhone's pinch-to-zoom. Each interaction is illustrated with gorgeous art that makes you want to linger. It's a love letter to the designers and engineers who shaped how we touch screens, click buttons, and navigate the digital world. The article argues that software isn't just a tool — it's culture, shaped by and shaping the people who use it.",
+    sticker: "star",
   },
   {
     id: "4",
