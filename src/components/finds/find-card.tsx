@@ -60,6 +60,12 @@ function CardWrapper({ find, className, children, isSelected, onInspect }: CardW
     className
   );
 
+  const submittedByTag = find.submittedBy ? (
+    <div className="px-4 pb-3 pt-0">
+      <span className="text-xs text-muted-foreground/60">Submitted by {find.submittedBy}</span>
+    </div>
+  ) : null;
+
   if (isFeatured) {
     return (
       <motion.div
@@ -69,6 +75,7 @@ function CardWrapper({ find, className, children, isSelected, onInspect }: CardW
         className={sharedClassName}
       >
         {children}
+        {submittedByTag}
       </motion.div>
     );
   }
@@ -84,6 +91,7 @@ function CardWrapper({ find, className, children, isSelected, onInspect }: CardW
       className={sharedClassName}
     >
       {children}
+      {submittedByTag}
     </Comp>
   );
 }

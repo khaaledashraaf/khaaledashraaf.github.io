@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { SubmitFindButton } from "./submit-find";
 
 const container = {
   hidden: {},
@@ -28,9 +29,12 @@ export function FindsHeader() {
       <motion.h1 variants={item} className="text-2xl font-bold tracking-tight">
         Internet Finds
       </motion.h1>
-      <motion.p variants={item} className="text-muted-foreground">
-        A gallery of things I&apos;ve found online that I think are worth sharing.
-      </motion.p>
+      <motion.div variants={item} className="flex items-center justify-between gap-4">
+        <p className="text-muted-foreground">
+          A gallery of things I&apos;ve found online that I think are worth sharing.
+        </p>
+        <SubmitFindButton />
+      </motion.div>
     </motion.div>
   );
 }

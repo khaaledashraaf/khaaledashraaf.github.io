@@ -25,6 +25,7 @@ export interface Find {
   priority?: 1 | 2 | 3;
   featured?: boolean;
   expandedNote?: string;
+  submittedBy?: string;
 }
 
 export const finds: Find[] = [
