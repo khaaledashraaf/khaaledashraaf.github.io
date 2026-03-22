@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Find, FindType } from "@/content/finds";
 import { FindCard } from "./find-card";
@@ -12,6 +12,7 @@ import {
   Film,
   BookOpen,
   Play,
+  MonitorPlay,
   FileText,
   Music,
   ImageIcon,
@@ -40,7 +41,8 @@ const item = {
 const typeLabels: Record<FindType, string> = {
   movie: "Movies",
   book: "Books",
-  reel: "Videos",
+  reel: "Reels",
+  video: "Videos",
   poetry: "Poetry",
   article: "Articles",
   music: "Music",
@@ -54,6 +56,7 @@ const typeIcons: Record<FindType, React.FC<{ className?: string }>> = {
   movie: Film,
   book: BookOpen,
   reel: Play,
+  video: MonitorPlay,
   poetry: PenLine,
   article: FileText,
   music: Music,
@@ -106,10 +109,31 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
   const [view, setView] = useState<ViewMode>("grid");
   const [selectedFind, setSelectedFind] = useState<Find | null>(null);
 
+  const [colCount, setColCount] = useState(3);
+
+  useEffect(() => {
+    function updateCols() {
+      if (window.innerWidth >= 1024) setColCount(3);
+      else if (window.innerWidth >= 640) setColCount(2);
+      else setColCount(1);
+    }
+    updateCols();
+    window.addEventListener("resize", updateCols);
+    return () => window.removeEventListener("resize", updateCols);
+  }, []);
+
   const filtered = useMemo(
     () => activeType ? finds.filter((f) => f.type === activeType) : finds,
     [finds, activeType]
   );
+
+  const columns = useMemo(() => {
+    const cols: Find[][] = Array.from({ length: colCount }, () => []);
+    filtered.forEach((find, i) => {
+      cols[i % colCount].push(find);
+    });
+    return cols;
+  }, [filtered, colCount]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -160,26 +184,50 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
       </motion.div>
 
       {view === "grid" ? (
-        <motion.div
-          key={`grid-${activeType ?? "all"}`}
-          className="columns-1 sm:columns-2 lg:columns-3 gap-4"
-          variants={container}
-          initial="hidden"
-          animate="show"
-        >
-          {filtered.map((find) => (
-            <motion.div
-              key={find.id}
-              variants={item}
-            >
-              <FindCard
-                find={find}
-                isSelected={selectedFind?.id === find.id}
-                onInspect={find.featured ? () => setSelectedFind(find) : undefined}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        colCount === 1 ? (
+          <motion.div
+            key={`grid-${activeType ?? "all"}-single`}
+            className="flex flex-col gap-4"
+            variants={container}
+            initial="hidden"
+            animate="show"
+          >
+            {filtered.map((find) => (
+              <motion.div key={find.id} variants={item}>
+                <FindCard
+                  find={find}
+                  isSelected={selectedFind?.id === find.id}
+                  onInspect={find.featured ? () => setSelectedFind(find) : undefined}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            key={`grid-${activeType ?? "all"}-${colCount}`}
+            className="flex gap-4"
+            variants={container}
+            initial="hidden"
+            animate="show"
+          >
+            {columns.map((col, colIndex) => (
+              <div key={colIndex} className="flex-1 flex flex-col gap-4">
+                {col.map((find) => (
+                  <motion.div
+                    key={find.id}
+                    variants={item}
+                  >
+                    <FindCard
+                      find={find}
+                      isSelected={selectedFind?.id === find.id}
+                      onInspect={find.featured ? () => setSelectedFind(find) : undefined}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ))}
+          </motion.div>
+        )
       ) : (
         <motion.div
           key={`list-${activeType ?? "all"}`}

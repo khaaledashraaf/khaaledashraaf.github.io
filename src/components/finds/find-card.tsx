@@ -8,6 +8,7 @@ import {
   Film,
   BookOpen,
   Play,
+  MonitorPlay,
   FileText,
   Music,
   ImageIcon,
@@ -177,6 +178,46 @@ function ReelCard({ find, isSelected, onInspect }: { find: Find; isSelected?: bo
   );
 }
 
+function VideoCard({ find, isSelected, onInspect }: { find: Find; isSelected?: boolean; onInspect?: () => void }) {
+  return (
+    <CardWrapper find={find} isSelected={isSelected} onInspect={onInspect} className="overflow-hidden">
+      {find.imageUrl && (
+        <div className="relative aspect-video w-full overflow-hidden">
+          <Image
+            src={find.imageUrl}
+            alt={find.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black">
+              <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="p-4">
+        <div className="flex items-center gap-2 text-muted-foreground mb-2">
+          <MonitorPlay className="h-3.5 w-3.5" />
+          <span className="text-xs uppercase tracking-wider">Video</span>
+          {find.sourceUrl && (
+            <span className="flex items-center gap-1 text-xs ml-auto">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814Z M9.545 15.568V8.432L15.818 12l-6.273 3.568Z" /></svg>
+              {extractDomain(find.sourceUrl)}
+            </span>
+          )}
+        </div>
+        <h3 className="font-semibold text-foreground">{find.title}</h3>
+        {find.author && (
+          <p className="text-sm text-muted-foreground">by {find.author}</p>
+        )}
+        <p className="mt-2 text-sm text-muted-foreground/80">{find.note}</p>
+      </div>
+    </CardWrapper>
+  );
+}
+
 function ArticleCard({ find, isSelected, onInspect }: { find: Find; isSelected?: boolean; onInspect?: () => void }) {
   const s = getPriority(find);
   const hasCover = find.coverVideoUrl || find.imageUrl;
@@ -338,6 +379,7 @@ const cardMap: Record<Find["type"], React.ComponentType<{ find: Find; isSelected
   movie: MovieCard,
   book: BookCard,
   reel: ReelCard,
+  video: VideoCard,
   poetry: PoetryCard,
   article: ArticleCard,
   music: MusicCard,

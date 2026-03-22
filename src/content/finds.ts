@@ -2,6 +2,7 @@ export type FindType =
   | "movie"
   | "book"
   | "reel"
+  | "video"
   | "poetry"
   | "article"
   | "music"
@@ -80,5 +81,16 @@ export const finds: Find[] = [
     priority: 3,
     featured: true,
     expandedNote: "Susan Kare is the iconographer who designed the first icons for Apple's Mac — making computers feel friendly and human. Working with Steve Jobs in the early 1980s, she created pixel-perfect icons on a 32×32 grid that became the visual language of personal computing: the Happy Mac, the paintbrush, the trash can, the command key symbol (⌘). Her presentation is a joy to watch — she walks through her process with warmth and humor. She even mentioned a book called \"Understanding Comics: The Invisible Art\" by Scott McCloud, which went straight to my read list. What strikes me most is how she proved that constraints (tiny grids, limited pixels) don't limit creativity — they focus it.",
+  },
+  {
+    id: "6",
+    title: "How AI Slop Will Spark the Next Human Renaissance",
+    type: "video",
+    note: "The idea that AI slop will eventually push people back toward real experiences and human craft. Not anti-AI, just pro-human.",
+    author: "After Skool",
+    sourceUrl: "https://www.youtube.com/watch?v=0iT9HbaRwfM",
+    imageUrl: "https://img.youtube.com/vi/0iT9HbaRwfM/hqdefault.jpg",
+    dateAdded: "2026-03-22",
+    priority: 2,
   },
 ];
