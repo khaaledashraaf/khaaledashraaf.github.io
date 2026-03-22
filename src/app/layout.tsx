@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LoadingProvider } from "@/components/loading-screen";
 import { Navbar } from "@/components/navbar";
 import { SiteChrome } from "@/components/site-chrome";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -59,8 +60,10 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <Navbar />
-          <SiteChrome>{children}</SiteChrome>
+          <LoadingProvider>
+            <Navbar />
+            <SiteChrome>{children}</SiteChrome>
+          </LoadingProvider>
         </ThemeProvider>
         <GoogleAnalytics gaId="G-LCV0P4FHDY" />
       </body>
