@@ -9,6 +9,7 @@ import {
   Film,
   BookOpen,
   Play,
+  MonitorPlay,
   FileText,
   Music,
   ImageIcon,
@@ -25,7 +26,8 @@ const typeConfig: Record<
 > = {
   movie: { icon: Film, label: "Movie" },
   book: { icon: BookOpen, label: "Book" },
-  reel: { icon: Play, label: "Video" },
+  reel: { icon: Play, label: "Reel" },
+  video: { icon: MonitorPlay, label: "Video" },
   poetry: { icon: FileText, label: "Poetry" },
   article: { icon: FileText, label: "Article" },
   music: { icon: Music, label: "Music" },
