@@ -69,7 +69,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
                 alt=""
                 width={96}
                 height={96}
-                className="w-24 h-24 object-contain"
+                className="w-16 h-16 object-contain"
                 priority
               />
             ) : (
@@ -78,7 +78,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
                 muted
                 loop
                 playsInline
-                className="w-24 h-24 object-contain"
+                className="w-30 h-30 object-contain"
               >
                 <source src="/animations/sun.mp4" type="video/mp4" />
               </video>
