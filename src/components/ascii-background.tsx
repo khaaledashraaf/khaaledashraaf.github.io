@@ -50,7 +50,7 @@ function generateClouds(count: number): CloudConfig[] {
   const initialPositions = [20, 60, 110];
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    y: 30 + Math.random() * 40,
+    y: 10 + Math.random() * 25,
     speed: 0.08 + Math.random() * 0.08,
     scale: 0.6 + Math.random() * 0.3,
     opacity: 0.5 + Math.random() * 0.7,
