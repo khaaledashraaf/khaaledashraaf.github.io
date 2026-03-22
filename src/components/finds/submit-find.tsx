@@ -236,8 +236,9 @@ export function SubmitFindButton() {
         onClick={() => setOpen(true)}
         className={cn(
           "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium",
-          "border border-border/50 text-muted-foreground",
-          "hover:text-foreground hover:border-border transition-colors"
+          "bg-white text-muted-foreground border border-border/50",
+          "dark:bg-white/10 dark:text-white/70 dark:border-white/10",
+          "hover:text-foreground hover:border-border dark:hover:text-white dark:hover:border-white/20 transition-colors"
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
