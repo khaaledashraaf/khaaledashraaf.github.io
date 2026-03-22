@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Find, FindType } from "@/content/finds";
 import { FindCard, type CardRect } from "./find-card";
@@ -107,9 +107,10 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
   const [selectedFind, setSelectedFind] = useState<Find | null>(null);
   const [selectedRect, setSelectedRect] = useState<CardRect | null>(null);
 
-  const filtered = activeType
-    ? finds.filter((f) => f.type === activeType)
-    : finds;
+  const filtered = useMemo(
+    () => activeType ? finds.filter((f) => f.type === activeType) : finds,
+    [finds, activeType]
+  );
 
   return (
     <div className="flex flex-col gap-6">

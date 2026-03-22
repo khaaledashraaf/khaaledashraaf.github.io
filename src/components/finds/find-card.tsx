@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
 import { cn } from "@/lib/utils";
@@ -124,10 +125,12 @@ function MovieCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRec
     <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
         <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/5]" : "aspect-[2/3]")}>
-          <img
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -165,10 +168,12 @@ function ReelCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect
     <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
         <div className="relative aspect-video w-full overflow-hidden">
-          <img
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black">
@@ -202,10 +207,12 @@ function ArticleCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardR
       )}
       {!find.coverVideoUrl && find.imageUrl && (
         <div className="relative aspect-video w-full overflow-hidden">
-          <img
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -250,11 +257,13 @@ function ImageCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRec
   return (
     <CardWrapper find={find} onInspect={onInspect} className="overflow-hidden">
       {find.imageUrl && (
-        <div className="relative w-full overflow-hidden">
-          <img
+        <div className="relative w-full aspect-square overflow-hidden">
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12">
             <h3 className="font-semibold text-white">{find.title}</h3>
@@ -271,11 +280,13 @@ function ToolCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRect
   return (
     <CardWrapper find={find} onInspect={onInspect} className="bg-emerald-100/20 dark:bg-emerald-500/[0.04] overflow-hidden">
       {find.imageUrl && (
-        <div className="aspect-video w-full overflow-hidden">
-          <img
+        <div className="relative aspect-video w-full overflow-hidden">
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
         </div>
       )}
@@ -301,10 +312,12 @@ function PeopleCard({ find, onInspect }: { find: Find; onInspect?: (rect: CardRe
     <CardWrapper find={find} onInspect={onInspect} className={cn("overflow-hidden", !hasCover && "p-4")}>
       {find.imageUrl && (
         <div className={cn("relative w-full overflow-hidden", find.priority === 3 ? "aspect-[3/2]" : "aspect-video")}>
-          <img
+          <Image
             src={find.imageUrl}
             alt={find.title}
-            className="h-full w-full object-cover transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500"
           />
         </div>
       )}

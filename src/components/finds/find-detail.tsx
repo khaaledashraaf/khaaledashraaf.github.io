@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
 import type { CardRect } from "./find-card";
@@ -171,10 +172,12 @@ export function FindDetailOverlay({
         {/* Media */}
         {find.imageUrl && !embedUrl && (
           <div className="relative w-full aspect-video overflow-hidden rounded-t-2xl">
-            <img
+            <Image
               src={find.imageUrl}
               alt={find.title}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 672px"
+              className="object-cover"
             />
           </div>
         )}

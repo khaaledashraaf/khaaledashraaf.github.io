@@ -22,7 +22,11 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="ghost"
       size="icon"
       className={cn("h-8 w-8", className)}
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => {
+        document.documentElement.classList.add("transitioning");
+        setTheme(theme === "dark" ? "light" : "dark");
+        setTimeout(() => document.documentElement.classList.remove("transitioning"), 350);
+      }}
     >
       {theme === "dark" ? (
         <svg
