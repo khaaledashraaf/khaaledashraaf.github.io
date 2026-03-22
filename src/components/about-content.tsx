@@ -12,6 +12,16 @@ const container = {
   },
 };
 
+const container2 = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 1.8,
+    },
+  },
+};
+
 const item = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
@@ -34,36 +44,39 @@ const sentences2 = [
 
 export function AboutContent() {
   return (
-    <div className="relative z-10 w-full flex flex-col items-center">
-      <div className="min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center">
-        <motion.img
-          src="/animations/heart-alpha.apng"
-          alt=""
-          className="w-20 h-20 object-cover object-center"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
-        <motion.div
-          className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg"
-          variants={container}
-          initial="hidden"
-          animate="show"
-        >
-          {sentences.map((sentence, i) => (
-            <motion.span key={i} variants={item}>
-              {sentence}{" "}
-            </motion.span>
-          ))}
-        </motion.div>
-      </div>
-      <div className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg pb-20">
-        {sentences2.map((sentence, i) => (
-          <span key={i}>
+    <div className="relative z-10 w-full flex flex-col items-center min-h-[calc(100vh-10rem)] justify-center">
+      <motion.img
+        src="/animations/heart-alpha.apng"
+        alt=""
+        className="w-20 h-20 object-cover object-center"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      />
+      <motion.div
+        className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        {sentences.map((sentence, i) => (
+          <motion.span key={i} variants={item}>
             {sentence}{" "}
-          </span>
+          </motion.span>
         ))}
-      </div>
+      </motion.div>
+      <motion.div
+        className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg mt-8"
+        variants={container2}
+        initial="hidden"
+        animate="show"
+      >
+        {sentences2.map((sentence, i) => (
+          <motion.span key={i} variants={item}>
+            {sentence}{" "}
+          </motion.span>
+        ))}
+      </motion.div>
     </div>
   );
 }

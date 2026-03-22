@@ -20,8 +20,10 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      {showFooterExtras && <LyingCharacter className={isProjects ? "hidden sm:flex" : ""} />}
-      <Footer light={isAbout} showAscii={showFooterExtras} />
+      <div className="relative">
+        {showFooterExtras && <LyingCharacter className={isProjects ? "hidden sm:flex" : ""} />}
+        <Footer light={isAbout} showAscii={showFooterExtras} />
+      </div>
     </div>
   );
 }
