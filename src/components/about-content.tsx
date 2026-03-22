@@ -34,8 +34,8 @@ const sentences2 = [
 
 export function AboutContent() {
   return (
-    <div className="relative z-10">
-      <div className="min-h-screen w-full flex flex-col items-center justify-center">
+    <div className="relative z-10 w-full flex flex-col items-center">
+      <div className="min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center">
         <motion.img
           src="/animations/heart-alpha.apng"
           alt=""
@@ -57,20 +57,12 @@ export function AboutContent() {
           ))}
         </motion.div>
       </div>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center">
-        <motion.div
-          className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg"
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
-          {sentences2.map((sentence, i) => (
-            <motion.span key={i} variants={item}>
-              {sentence}{" "}
-            </motion.span>
-          ))}
-        </motion.div>
+      <div className="text-white/80 text-base sm:text-lg leading-relaxed text-center sm:text-justify px-6 sm:px-0 sm:max-w-lg pb-20">
+        {sentences2.map((sentence, i) => (
+          <span key={i}>
+            {sentence}{" "}
+          </span>
+        ))}
       </div>
     </div>
   );
