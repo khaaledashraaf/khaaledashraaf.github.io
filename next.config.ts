@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       { hostname: "storage.icograms.com" },
       { hostname: "invention.si.edu" },
       { hostname: "www.mac-history.net" },
+      { hostname: "cdn.prod.website-files.com" },
+      { hostname: "www.cnet.com" },
+      { hostname: "i.pinimg.com" },
+      { hostname: "pbs.twimg.com" },
     ],
   },
 };

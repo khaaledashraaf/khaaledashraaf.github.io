@@ -127,16 +127,25 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
     [finds, activeType]
   );
 
+  const effectiveCols = useMemo(() => {
+    return Math.min(colCount, filtered.length);
+  }, [colCount, filtered.length]);
+
   const columns = useMemo(() => {
-    const cols: Find[][] = Array.from({ length: colCount }, () => []);
+    const cols: Find[][] = Array.from({ length: effectiveCols }, () => []);
     filtered.forEach((find, i) => {
-      cols[i % colCount].push(find);
+      cols[i % effectiveCols].push(find);
     });
     return cols;
-  }, [filtered, colCount]);
+  }, [filtered, effectiveCols]);
+
+  const placeholderCount = useMemo(() => {
+    if (colCount <= 1) return 0;
+    return colCount - effectiveCols;
+  }, [colCount, effectiveCols]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <motion.div
         className="flex items-center gap-2"
         initial={{ opacity: 0, y: 10 }}
@@ -205,13 +214,13 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
         ) : (
           <motion.div
             key={`grid-${activeType ?? "all"}-${colCount}`}
-            className="flex gap-4"
+            className="flex gap-4 w-full"
             variants={container}
             initial="hidden"
             animate="show"
           >
             {columns.map((col, colIndex) => (
-              <div key={colIndex} className="flex-1 flex flex-col gap-4">
+              <div key={colIndex} className="flex-1 min-w-0 flex flex-col gap-4">
                 {col.map((find) => (
                   <motion.div
                     key={find.id}
@@ -224,6 +233,13 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
                     />
                   </motion.div>
                 ))}
+              </div>
+            ))}
+            {Array.from({ length: placeholderCount }).map((_, i) => (
+              <div key={`placeholder-${i}`} className="flex-1 min-w-0 flex flex-col gap-4">
+                <motion.div variants={item}>
+                  <div className="rounded-xl border border-dashed border-border/40 bg-muted/20 aspect-[4/3]" />
+                </motion.div>
               </div>
             ))}
           </motion.div>

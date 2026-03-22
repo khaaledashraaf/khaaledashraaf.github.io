@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
 import { cn } from "@/lib/utils";
+import { getFeaturedContent } from "./featured";
 import {
   Film,
   BookOpen,
@@ -72,6 +73,7 @@ export function FindDetailOverlay({
   const { icon: TypeIcon, label: typeLabel } = typeConfig[find.type];
   const embedUrl = getEmbedUrl(find);
   const spotifyUrl = getSpotifyEmbed(find);
+  const FeaturedContent = getFeaturedContent(find.id);
   const relatedFinds = allFinds
     .filter((f) => f.type === find.type && f.id !== find.id)
     .slice(0, 3);
@@ -183,6 +185,14 @@ export function FindDetailOverlay({
             <blockquote className="mt-4 border-l-2 border-primary/40 pl-4 font-serif italic text-lg text-foreground/90 whitespace-pre-line">
               {find.excerpt}
             </blockquote>
+          )}
+
+          {FeaturedContent && (
+            <div className="mt-6">
+              <Suspense fallback={null}>
+                <FeaturedContent />
+              </Suspense>
+            </div>
           )}
 
           {spotifyUrl && (

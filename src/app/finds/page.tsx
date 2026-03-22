@@ -14,7 +14,7 @@ export default function FindsPage() {
   const types = getAllFindTypes();
 
   return (
-    <div className="flex flex-col gap-8 pt-16 sm:pt-24 mb-48">
+    <div className="flex flex-col gap-8 pt-16 sm:pt-24 mb-48 w-full">
       <FindsHeader />
       <FindsGrid finds={finds} types={types} />
     </div>
