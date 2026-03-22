@@ -108,9 +108,9 @@ export function FindDetailOverlay({
 
       {/* Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        initial={{ opacity: 0, scale: 0.5, rotateY: -90 }}
+        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+        exit={{ opacity: 0, scale: 0.5, rotateY: 90 }}
         className={cn(
           "relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto",
           "rounded-2xl backdrop-blur-xl",
@@ -118,7 +118,7 @@ export function FindDetailOverlay({
           "shadow-[0_24px_80px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.03)]",
           "border border-white/50 dark:border-white/[0.1]"
         )}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        transition={{ type: "spring", stiffness: 150, damping: 20 }}
       >
         {/* Close button */}
         <motion.button
