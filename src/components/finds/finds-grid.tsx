@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Find, FindType } from "@/content/finds";
-import { FindCard, type CardRect } from "./find-card";
+import { FindCard } from "./find-card";
 import { FindDetailOverlay } from "./find-detail";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -105,7 +105,6 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
   const [activeType, setActiveType] = useState<FindType | null>(null);
   const [view, setView] = useState<ViewMode>("grid");
   const [selectedFind, setSelectedFind] = useState<Find | null>(null);
-  const [selectedRect, setSelectedRect] = useState<CardRect | null>(null);
 
   const filtered = useMemo(
     () => activeType ? finds.filter((f) => f.type === activeType) : finds,
@@ -175,7 +174,8 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
             >
               <FindCard
                 find={find}
-                onInspect={find.featured ? (rect) => { setSelectedRect(rect); setSelectedFind(find); } : undefined}
+                isSelected={selectedFind?.id === find.id}
+                onInspect={find.featured ? () => setSelectedFind(find) : undefined}
               />
             </motion.div>
           ))}
@@ -201,12 +201,11 @@ export function FindsGrid({ finds, types }: FindsGridProps) {
       )}
 
       <AnimatePresence>
-        {selectedFind && selectedRect && (
+        {selectedFind && (
           <FindDetailOverlay
             find={selectedFind}
             allFinds={finds}
-            originRect={selectedRect}
-            onClose={() => { setSelectedFind(null); setSelectedRect(null); }}
+            onClose={() => setSelectedFind(null)}
           />
         )}
       </AnimatePresence>

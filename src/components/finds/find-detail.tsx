@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Find } from "@/content/finds";
-import type { CardRect } from "./find-card";
 import { cn } from "@/lib/utils";
 import {
   Film,
@@ -60,14 +59,12 @@ function getSpotifyEmbed(find: Find): string | null {
 interface FindDetailOverlayProps {
   find: Find;
   allFinds: Find[];
-  originRect: CardRect;
   onClose: () => void;
 }
 
 export function FindDetailOverlay({
   find,
   allFinds,
-  originRect,
   onClose,
 }: FindDetailOverlayProps) {
   const { icon: TypeIcon, label: typeLabel } = typeConfig[find.type];
@@ -77,31 +74,14 @@ export function FindDetailOverlay({
     .filter((f) => f.type === find.type && f.id !== find.id)
     .slice(0, 3);
 
-  // Calculate the final centered position
-  const finalRect = useMemo(() => {
-    const maxW = Math.min(672, window.innerWidth - 64); // max-w-2xl = 672px, with padding
-    const maxH = window.innerHeight * 0.85;
-    return {
-      top: (window.innerHeight - maxH) / 2,
-      left: (window.innerWidth - maxW) / 2,
-      width: maxW,
-      height: maxH,
-    };
-  }, []);
-
   // Scroll lock
   useEffect(() => {
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
     return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      window.scrollTo(0, scrollY);
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.paddingRight = "";
     };
   }, []);
 
@@ -114,60 +94,42 @@ export function FindDetailOverlay({
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  const ease = [0.22, 1, 0.36, 1] as const;
-
   return (
-    <div className="fixed inset-0 z-50" style={{ perspective: 1200 }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8" style={{ perspective: 1200 }}>
       {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.3 }}
         onClick={onClose}
       />
 
-      {/* Card — animates from origin rect to center */}
+      {/* Card */}
       <motion.div
-        initial={{
-          position: "fixed",
-          top: originRect.top,
-          left: originRect.left,
-          width: originRect.width,
-          height: originRect.height,
-          rotateY: 0,
-        }}
-        animate={{
-          top: finalRect.top,
-          left: finalRect.left,
-          width: finalRect.width,
-          height: finalRect.height,
-          rotateY: 360,
-        }}
-        exit={{
-          top: originRect.top,
-          left: originRect.left,
-          width: originRect.width,
-          height: originRect.height,
-          rotateY: 0,
-        }}
-        transition={{ duration: 1.5, ease }}
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
         className={cn(
-          "z-10 overflow-y-auto",
+          "relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto",
           "rounded-2xl backdrop-blur-xl",
           "bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-white/[0.12] dark:via-white/[0.08] dark:to-white/[0.04]",
           "shadow-[0_24px_80px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-1px_0_rgba(0,0,0,0.04)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.03)]",
           "border border-white/50 dark:border-white/[0.1]"
         )}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
         {/* Close button */}
-        <button
+        <motion.button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
           <X className="h-4 w-4" />
-        </button>
+        </motion.button>
 
         {/* Media */}
         {find.imageUrl && !embedUrl && (
@@ -193,7 +155,12 @@ export function FindDetailOverlay({
         )}
 
         {/* Content */}
-        <div className="p-6">
+        <motion.div
+          className="p-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
           <div className="flex items-center gap-2 text-muted-foreground mb-3">
             <TypeIcon className="h-4 w-4" />
             <span className="text-xs uppercase tracking-wider font-medium">
@@ -262,7 +229,7 @@ export function FindDetailOverlay({
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );
