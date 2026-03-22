@@ -25,6 +25,7 @@
 *.pem
 /.claude/
 /.cursor/
+/performance/
 
 # debug
 npm-debug.log*

@@ -20,20 +20,23 @@ interface CloudConfig {
 // UTILITIES
 // ============================================================================
 
+const FRAME_COUNTS: Record<string, number> = {
+  sun: 4,
+  bird: 3,
+  moon: 1,
+  cloud: 1,
+};
+
 async function loadAsciiFrames(basePath: string, prefix: string) {
-  const frames: string[] = [];
-  let index = 1;
-  while (true) {
-    try {
-      const res = await fetch(`${basePath}/${prefix}-kf${index}.txt`);
-      if (!res.ok) break;
-      frames.push(await res.text());
-      index++;
-    } catch {
-      break;
-    }
-  }
-  return frames;
+  const count = FRAME_COUNTS[prefix] ?? 1;
+  const frames = await Promise.all(
+    Array.from({ length: count }, (_, i) =>
+      fetch(`${basePath}/${prefix}-kf${i + 1}.txt`).then((res) =>
+        res.ok ? res.text() : ""
+      )
+    )
+  );
+  return frames.filter(Boolean);
 }
 
 function generateStars(count: number) {
