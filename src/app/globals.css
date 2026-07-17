@@ -166,3 +166,14 @@ html.transitioning *::after {
 .animate-fade-in {
   animation: fade-in 0.2s ease-in;
 }
+
+/* Training — exercise figure crossfade (relaxation ↔ tension) */
+.ex-frame { filter: invert(1); }
+.ex-tension { animation: ex-a 2.6s ease-in-out infinite; }
+.ex-relax { animation: ex-b 2.6s ease-in-out infinite; }
+@keyframes ex-a { 0%, 40% { opacity: 0; } 55%, 95% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes ex-b { 0%, 40% { opacity: 1; } 55%, 95% { opacity: 0; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ex-tension { animation: none; opacity: 1; }
+  .ex-relax { animation: none; opacity: 0; }
+}

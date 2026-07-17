@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["sarkless-margarette-postmeningeal.ngrok-free.dev"],
+  allowedDevOrigins: [
+    "sarkless-margarette-postmeningeal.ngrok-free.dev",
+    "192.168.1.4",
+  ],
   async headers() {
     return [
       {

@@ -21,6 +21,9 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const isAbout = pathname === "/about";
 
+  // The training app runs as a standalone PWA — no portfolio chrome.
+  if (pathname.startsWith("/training")) return null;
+
   return (
     <>
     <header className={cn("sticky top-0 z-50 w-full border-b", isAbout ? "border-transparent bg-transparent" : "border-border/40 bg-background/80 backdrop-blur-sm")}>

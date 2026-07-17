@@ -26,6 +26,7 @@
     "octokit": "^5.0.5",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
+    "react-body-highlighter": "^2.0.5",
     "react-dom": "19.2.3",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",

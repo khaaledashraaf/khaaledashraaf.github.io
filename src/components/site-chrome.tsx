@@ -15,6 +15,12 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const showFooterExtras = !isAbout && !isFinds;
   const isProjects = pathname === "/projects";
   const isBlog = pathname.startsWith("/blog");
+  const isTraining = pathname.startsWith("/training");
+
+  // Training runs as a standalone PWA — render it bare, full-height, no chrome.
+  if (isTraining) {
+    return <div className="flex min-h-screen flex-col">{children}</div>;
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
