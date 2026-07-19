@@ -7,11 +7,31 @@ export function trainingPassword(): string | undefined {
   return process.env.TRAINING_PASSWORD || process.env.FINDS_ADMIN_PASSWORD;
 }
 
+export const AUTH_COOKIE = "training_auth";
+
+/** Reads a cookie value off the raw Cookie header. */
+export function readCookie(request: Request, name: string): string | undefined {
+  const header = request.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return decodeURIComponent(v.join("="));
+  }
+  return undefined;
+}
+
+/** Accepts either a Bearer header (used by the login probe) or the persistent
+ * `training_auth` cookie set after a successful login. The cookie is
+ * server-set + HttpOnly so it survives iOS home-screen storage eviction, which
+ * localStorage does not. */
 export function validateAuth(request: Request): boolean {
-  const auth = request.headers.get("Authorization");
-  if (!auth?.startsWith("Bearer ")) return false;
   const pw = trainingPassword();
-  return !!pw && auth.slice(7) === pw;
+  if (!pw) return false;
+
+  const auth = request.headers.get("Authorization");
+  if (auth?.startsWith("Bearer ") && auth.slice(7) === pw) return true;
+
+  return readCookie(request, AUTH_COOKIE) === pw;
 }
 
 export function unauthorized() {

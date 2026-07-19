@@ -12,6 +12,9 @@ export const GOAL = {
   proteinRange: [120, 150] as [number, number],
 };
 
+/** Khaled's ideal-weight target date — the horizon the dashboard counts down to. */
+export const TARGET_DATE = "2027-02-27";
+
 /** Cadence (days) after which a log is considered "due" — drives the alert strip. */
 export const DUE_AFTER_DAYS = {
   bodyweight: 7,

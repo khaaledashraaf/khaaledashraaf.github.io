@@ -21,6 +21,7 @@ import {
 } from "@/lib/progression";
 import {
   GOAL,
+  TARGET_DATE,
   DUE_AFTER_DAYS,
   INBODY_METRICS,
   LAB_MARKERS,
@@ -34,9 +35,8 @@ interface BodyweightRow { id: string; date: string; weight: number }
 interface ReportRow { id: string; type: string; report_date: string; file_name: string | null; summary: string | null }
 interface MetricRow { id: string; report_id: string; category: string; metric: string; label: string; value: number | null; unit: string | null; reference_range: string | null; flag: string | null; measured_date: string }
 
-type Tab = "workout" | "history" | "weight" | "health";
+type Tab = "home" | "workout" | "weight" | "health";
 
-const PW_KEY = "training_pw";
 const RED = "#e23b30";
 
 // ------------------------------------------------------------ date helpers
@@ -54,31 +54,100 @@ function fmtMonthYear(d: Date): string {
 function daysBetween(a: string, b: string): number {
   return Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
 }
+// Fake id for rows created in test mode (never touches the database).
+function localId(): string {
+  const c = typeof crypto !== "undefined" ? crypto : undefined;
+  return `test-${c?.randomUUID ? c.randomUUID() : `${Date.now()}-${Math.round(Math.random() * 1e6)}`}`;
+}
+// A session is "complete" once every exercise in its workout has all its sets logged.
+function isSessionComplete(session: SessionRow, allSets: SetRow[]): boolean {
+  const w = getWorkout(session.workout_id);
+  if (!w) return false;
+  return w.exercises.every(
+    (ex) => allSets.filter((s) => s.session_id === session.id && s.exercise_id === ex.id && s.weight != null && s.reps != null).length >= ex.sets
+  );
+}
+// The workout to offer next — mirrors WorkoutTab: resume an unfinished session,
+// else advance the A→B→C rotation past the most recent one.
+function nextWorkoutToDo(sessions: SessionRow[], sets: SetRow[]): string {
+  const mostRecent = sessions[0];
+  const active = mostRecent && !isSessionComplete(mostRecent, sets) ? mostRecent : null;
+  return active ? active.workout_id : nextWorkoutId(mostRecent?.workout_id);
+}
+function addDays(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+function fmtDM(s: string): string {
+  const [, m, d] = s.split("-").map(Number);
+  return `${d}/${m}`;
+}
+function fmtLong(s: string): string {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+// Per-tab page heading.
+function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div>
+      <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+      {subtitle && <p className="mt-0.5 text-xs text-[#9aa1aa]">{subtitle}</p>}
+    </div>
+  );
+}
+
+// The pixel dumbbell from the app icon, as inline SVG so it can be recolored.
+function DumbbellMark({ className = "", color = "#0f1012" }: { className?: string; color?: string }) {
+  return (
+    <svg viewBox="0 3 16 10" className={className} fill={color} role="img" aria-label="Training">
+      <rect x="0" y="5" width="2" height="6" />
+      <rect x="3" y="3" width="2" height="10" />
+      <rect x="5" y="6" width="1" height="4" />
+      <rect x="6" y="7" width="4" height="2" />
+      <rect x="10" y="6" width="1" height="4" />
+      <rect x="11" y="3" width="2" height="10" />
+      <rect x="14" y="5" width="2" height="6" />
+    </svg>
+  );
+}
 
 // ============================================================ root
 export function TrainingClient() {
-  const [pw, setPw] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<"loading" | "in" | "out">("loading");
+  // Auth lives in a server-set HttpOnly cookie, so we can't read it from JS —
+  // we probe the API instead. 200 means the cookie is valid; 401 means log in.
   useEffect(() => {
-    setPw(localStorage.getItem(PW_KEY));
-    setReady(true);
+    fetch("/api/training/data")
+      .then((r) => setStatus(r.ok ? "in" : "out"))
+      .catch(() => setStatus("out"));
   }, []);
-  if (!ready) return <div className="min-h-screen bg-[#0e0f12]" />;
-  if (!pw) return <Gate onAuthed={setPw} />;
-  return <App pw={pw} onSignOut={() => { localStorage.removeItem(PW_KEY); setPw(null); }} />;
+  const signOut = useCallback(async () => {
+    await fetch("/api/training/login", { method: "DELETE" });
+    setStatus("out");
+  }, []);
+  if (status === "loading") return <div className="min-h-screen bg-[#0e0f12]" />;
+  if (status === "out") return <Gate onAuthed={() => setStatus("in")} />;
+  return <App onSignOut={signOut} />;
 }
 
 // ============================================================ gate
-function Gate({ onAuthed }: { onAuthed: (pw: string) => void }) {
+function Gate({ onAuthed }: { onAuthed: () => void }) {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError("");
-    const res = await fetch("/api/training/data", { headers: { Authorization: `Bearer ${value}` } });
+    const res = await fetch("/api/training/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: value }),
+    });
     setBusy(false);
-    if (res.ok) { localStorage.setItem(PW_KEY, value); onAuthed(value); }
+    if (res.ok) onAuthed();
     else setError("Wrong password");
   }
   return (
@@ -101,8 +170,8 @@ function Gate({ onAuthed }: { onAuthed: (pw: string) => void }) {
 }
 
 // ============================================================ app shell
-function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
-  const [tab, setTab] = useState<Tab>("workout");
+function App({ onSignOut }: { onSignOut: () => void }) {
+  const [tab, setTab] = useState<Tab>("home");
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
@@ -111,10 +180,28 @@ function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [metrics, setMetrics] = useState<MetricRow[]>([]);
 
-  const authHeaders = useMemo(() => ({ Authorization: `Bearer ${pw}`, "Content-Type": "application/json" }), [pw]);
+  // Test mode: real data still loads (so prescriptions/history look real), but
+  // every write stays in local state and never hits Supabase. Persists across
+  // reloads via localStorage; also enable-able with ?debug in the URL.
+  const [debug, setDebug] = useState(false);
+  useEffect(() => {
+    const on = localStorage.getItem("training_debug") === "1"
+      || new URLSearchParams(window.location.search).has("debug");
+    setDebug(on);
+  }, []);
+  const toggleDebug = useCallback(() => {
+    setDebug((d) => {
+      const n = !d;
+      try { localStorage.setItem("training_debug", n ? "1" : "0"); } catch { /* ignore */ }
+      return n;
+    });
+  }, []);
+
+  // The auth cookie rides along automatically on same-origin requests.
+  const authHeaders = useMemo(() => ({ "Content-Type": "application/json" }), []);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/training/data", { headers: { Authorization: `Bearer ${pw}` } });
+    const res = await fetch("/api/training/data");
     if (res.status === 401) return onSignOut();
     const json = await res.json();
     if (json.setupRequired) setSetupRequired(true);
@@ -123,40 +210,55 @@ function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
       setReports(json.reports ?? []); setMetrics(json.metrics ?? []);
     }
     setLoading(false);
-  }, [pw, onSignOut]);
+  }, [onSignOut]);
   useEffect(() => { load(); }, [load]);
 
   const ensureSession = useCallback(async (workoutId: string, date: string): Promise<string | null> => {
     const existing = sessions.find((s) => s.workout_id === workoutId && s.date === date);
     if (existing) return existing.id;
+    if (debug) {
+      const session = { id: localId(), workout_id: workoutId, date };
+      setSessions((p) => [session, ...p]);
+      return session.id;
+    }
     const res = await fetch("/api/training/session", { method: "POST", headers: authHeaders, body: JSON.stringify({ workoutId, date }) });
     const json = await res.json();
     if (json.session) { setSessions((p) => [json.session, ...p]); return json.session.id; }
     return null;
-  }, [sessions, authHeaders]);
+  }, [sessions, authHeaders, debug]);
 
   const saveSet = useCallback(async (sessionId: string, exerciseId: string, setNumber: number, weight: number | string, reps: number | string) => {
+    if (debug) {
+      const set = { id: localId(), session_id: sessionId, exercise_id: exerciseId, set_number: setNumber, weight: Number(weight), reps: Number(reps) };
+      setSets((p) => [...p.filter((s) => !(s.session_id === sessionId && s.exercise_id === exerciseId && s.set_number === setNumber)), set]);
+      return;
+    }
     const res = await fetch("/api/training/set", { method: "POST", headers: authHeaders, body: JSON.stringify({ sessionId, exerciseId, setNumber, weight, reps }) });
     const json = await res.json();
     if (json.set) setSets((p) => [...p.filter((s) => s.id !== json.set.id), json.set]);
-  }, [authHeaders]);
+  }, [authHeaders, debug]);
 
   const deleteSet = useCallback(async (id: string) => {
-    await fetch(`/api/training/set?id=${id}`, { method: "DELETE", headers: authHeaders });
+    if (!debug) await fetch(`/api/training/set?id=${id}`, { method: "DELETE", headers: authHeaders });
     setSets((p) => p.filter((s) => s.id !== id));
-  }, [authHeaders]);
+  }, [authHeaders, debug]);
 
   const deleteReport = useCallback(async (id: string) => {
-    await fetch(`/api/training/health/upload?id=${id}`, { method: "DELETE", headers: authHeaders });
+    if (!debug) await fetch(`/api/training/health/upload?id=${id}`, { method: "DELETE", headers: authHeaders });
     setReports((p) => p.filter((r) => r.id !== id));
     setMetrics((p) => p.filter((m) => m.report_id !== id));
-  }, [authHeaders]);
+  }, [authHeaders, debug]);
 
   const saveBodyweight = useCallback(async (date: string, weight: string) => {
+    if (debug) {
+      const entry = { id: localId(), date, weight: Number(weight) };
+      setBodyweight((p) => [...p.filter((b) => b.date !== date), entry].sort((a, b) => a.date.localeCompare(b.date)));
+      return;
+    }
     const res = await fetch("/api/training/bodyweight", { method: "POST", headers: authHeaders, body: JSON.stringify({ date, weight }) });
     const json = await res.json();
     if (json.entry) setBodyweight((p) => [...p.filter((b) => b.date !== json.entry.date), json.entry].sort((a, b) => a.date.localeCompare(b.date)));
-  }, [authHeaders]);
+  }, [authHeaders, debug]);
 
   if (setupRequired) return <SetupScreen onRetry={() => { setSetupRequired(false); setLoading(true); load(); }} />;
 
@@ -172,13 +274,20 @@ function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-[#0e0f12] pb-24 text-[#f3f5f7]">
-      <header className="flex items-center justify-between px-5 pb-2" style={{ paddingTop: "max(1.4rem, env(safe-area-inset-top))" }}>
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight">Training</h1>
-          <p className="text-xs text-[#9aa1aa]">Recomp · full-body 3×/week</p>
-        </div>
-        <button onClick={onSignOut} className="text-xs text-[#9aa1aa]">Sign out</button>
+      <header className="mb-2 flex items-center justify-between bg-[#e23b30] px-5 pb-3" style={{ paddingTop: "max(1.4rem, env(safe-area-inset-top))" }}>
+        <DumbbellMark className="h-5 w-auto" color="#0f1012" />
+        {/* test toggle kept discreet while you're still testing */}
+        <button onClick={toggleDebug}
+          className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${debug ? "border-white bg-white/20 text-white" : "border-white/40 text-white/70"}`}>
+          {debug ? "Test on" : "Test"}
+        </button>
       </header>
+
+      {debug && (
+        <div className="mx-5 mb-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-center text-[11px] font-semibold text-amber-300">
+          Test mode — nothing is being saved to the database
+        </div>
+      )}
 
       {due.length > 0 && (
         <div className="space-y-1.5 px-5 pb-2">
@@ -196,21 +305,14 @@ function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
       <main className="flex-1 px-5">
         {loading ? (
           <div className="py-20 text-center text-sm text-[#9aa1aa]">Loading…</div>
+        ) : tab === "home" ? (
+          <DashboardTab sessions={sessions} sets={sets} bodyweight={bodyweight} metrics={metrics} setTab={setTab} />
         ) : tab === "workout" ? (
-          <WorkoutTab sessions={sessions} sets={sets} ensureSession={ensureSession} saveSet={saveSet} deleteSet={deleteSet} />
-        ) : tab === "history" ? (
-          <HistoryTab sessions={sessions} sets={sets} />
+          <WorkoutTab sessions={sessions} sets={sets} bodyweightKg={bodyweight[bodyweight.length - 1]?.weight} ensureSession={ensureSession} saveSet={saveSet} deleteSet={deleteSet} />
         ) : tab === "weight" ? (
           <WeightTab bodyweight={bodyweight} saveBodyweight={saveBodyweight} />
         ) : (
-          <HealthTab reports={reports} metrics={metrics} pw={pw} onUploaded={load} onDelete={deleteReport} />
-        )}
-        {!loading && (
-          <footer className="px-1 pb-4 pt-6 text-center text-[10px] leading-relaxed text-[#9aa1aa]/60">
-            Exercise illustrations:{" "}
-            <a href="https://github.com/everkinetic/data" className="underline underline-offset-2" target="_blank" rel="noreferrer">Everkinetic</a>{" "}
-            (CC BY-SA 3.0) · Muscle map: react-body-highlighter (MIT)
-          </footer>
+          <HealthTab reports={reports} metrics={metrics} testMode={debug} onUploaded={load} onDelete={deleteReport} />
         )}
       </main>
 
@@ -222,8 +324,8 @@ function App({ pw, onSignOut }: { pw: string; onSignOut: () => void }) {
 // ============================================================ tab bar
 function TabBar({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   const items: { id: Tab; label: string }[] = [
+    { id: "home", label: "Home" },
     { id: "workout", label: "Workout" },
-    { id: "history", label: "History" },
     { id: "weight", label: "Weight" },
     { id: "health", label: "Health" },
   ];
@@ -239,20 +341,244 @@ function TabBar({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   );
 }
 
+// ============================================================ DASHBOARD (home)
+function DashboardTab({ sessions, sets, bodyweight, metrics, setTab }: {
+  sessions: SessionRow[]; sets: SetRow[]; bodyweight: BodyweightRow[];
+  metrics: MetricRow[]; setTab: (t: Tab) => void;
+}) {
+  const today = todayStr();
+  const start = GOAL.startWeight;
+  const target = GOAL.targetWeight;
+
+  const latest = bodyweight[bodyweight.length - 1];
+  const todayWeight = latest?.weight ?? null; // this morning's raw log (shown small)
+  // 7-day rolling average — the honest "where am I" number the goal math anchors on
+  const avg7 = useMemo(() => {
+    if (!latest) return null;
+    const cutoff = Date.parse(latest.date) - 6 * 86400000;
+    const recent = bodyweight.filter((b) => Date.parse(b.date) >= cutoff);
+    return recent.reduce((s, b) => s + b.weight, 0) / recent.length;
+  }, [bodyweight, latest]);
+  const current = avg7 ?? start;
+  const toGo = Math.max(0, current - target);
+  const startDate = bodyweight[0]?.date ?? today;
+  // bar fill = time elapsed toward the target date
+  const spanMs = Math.max(1, Date.parse(TARGET_DATE) - Date.parse(startDate));
+  const datePct = (d: string) => clamp(((Date.parse(d) - Date.parse(startDate)) / spanMs) * 100, 0, 100);
+  const pct = datePct(today);
+
+  const daysLeft = Math.max(0, daysBetween(today, TARGET_DATE));
+  const weeksLeft = Math.max(0, Math.round(daysLeft / 7));
+  const neededPace = weeksLeft > 0 ? toGo / weeksLeft : 0; // kg/week to hit target on time
+
+  // workouts logged in the last 7 days
+  const last7 = sessions.filter((s) => { const d = daysBetween(s.date, today); return d >= 0 && d <= 6; }).length;
+
+  // next workout in the rotation
+  const nextId = nextWorkoutToDo(sessions, sets);
+  const nextWorkout = getWorkout(nextId)!;
+
+  // milestones with projected dates (converge on the target date)
+  const milestones = GOAL.milestones.map((m) => ({
+    m,
+    done: current <= m,
+    date: current > m && neededPace > 0 ? addDays(today, Math.round(((current - m) / neededPace) * 7)) : null,
+  }));
+
+  // health-marker trends (sparkline per attribute); only markers with 2+ points
+  const seriesFor = (key: string) => metrics
+    .filter((x) => x.metric === key && x.value != null)
+    .sort((a, b) => a.measured_date.localeCompare(b.measured_date))
+    .map((x) => ({ x: x.measured_date, y: x.value as number }));
+  const trendGroup = (keys: string[], defs: { key: string; label: string; unit: string; betterLower?: boolean }[]) =>
+    keys
+      .map((k) => { const d = defs.find((x) => x.key === k); return { key: k, label: d?.label ?? k, unit: d?.unit ?? "", betterLower: d?.betterLower, series: seriesFor(k) }; })
+      .filter((t) => t.series.length >= 2);
+  const lipidTrends = trendGroup(
+    ["total_cholesterol", "ldl_cholesterol", "hdl_cholesterol", "triglycerides", "non_hdl_cholesterol"],
+    LAB_MARKERS,
+  );
+  const bodyTrends = trendGroup(
+    ["weight_kg", "skeletal_muscle_mass_kg", "body_fat_pct", "visceral_fat_level"],
+    INBODY_METRICS,
+  );
+
+  const trendCard = (t: { key: string; label: string; unit: string; betterLower?: boolean; series: { x: string; y: number }[] }) => {
+    // Green when the net change is a health improvement, red when it's the wrong way.
+    const delta = t.series[t.series.length - 1].y - t.series[0].y;
+    const color = delta === 0 ? "#9aa1aa" : (t.betterLower ? delta < 0 : delta > 0) ? "#2fb079" : "#e23b30";
+    return (
+      <div key={t.key} className="rounded-xl border border-white/10 bg-[#0e0f12] p-2.5">
+        <div className="mb-1 truncate text-[11px] font-semibold text-[#9aa1aa]">{t.label}</div>
+        <LineChart points={t.series} unit={t.unit} compact color={color} />
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-5 py-4">
+      <PageTitle title="Welcome back, Khaled" subtitle={fmtLong(today)} />
+
+      {/* countdown hero */}
+      <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-3xl font-extrabold leading-none tabular-nums">{current.toFixed(1)}<span className="ml-1 text-base font-normal text-[#9aa1aa]">kg</span></div>
+            <div className="mt-1.5 text-[11px] text-[#9aa1aa] tabular-nums">7-day avg{todayWeight != null ? ` · today ${todayWeight.toFixed(1)}` : ""}</div>
+          </div>
+          <div className="text-2xl font-extrabold leading-none text-[#e23b30] tabular-nums">{daysLeft}<span className="ml-1 text-sm font-normal text-[#9aa1aa]">days</span></div>
+        </div>
+
+        {/* weights above the bar: start · milestones · goal */}
+        <div className="relative mb-1 mt-5 h-3 text-[11px] font-bold leading-none tabular-nums">
+          <span className="absolute left-0">{start}<span className="text-[8px] font-normal text-[#9aa1aa]"> kg</span></span>
+          {milestones.filter((ms) => ms.m !== target && ms.date).map((ms) => (
+            <span key={ms.m} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${datePct(ms.date!)}%` }}>
+              {ms.m}<span className="text-[8px] font-normal text-[#9aa1aa]"> kg</span>
+            </span>
+          ))}
+          <span className="absolute right-0 text-[#e23b30]">{target}<span className="text-[8px] font-normal text-[#9aa1aa]"> kg</span></span>
+        </div>
+        <div className="relative h-2 rounded-full bg-white/10">
+          <div className="absolute inset-y-0 left-0 rounded-full bg-[#e23b30]" style={{ width: `${pct}%` }} />
+          {milestones.filter((ms) => ms.m !== target && ms.date).map((ms) => (
+            <span key={ms.m} className="absolute top-1/2 h-2.5 w-0.5 -translate-y-1/2 rounded-full bg-white/40"
+              style={{ left: `${datePct(ms.date!)}%` }} />
+          ))}
+        </div>
+        {/* dates below the bar: start · milestones · end */}
+        <div className="relative mt-2 h-3 text-[10px] text-[#9aa1aa] tabular-nums">
+          <span className="absolute left-0">{fmtDM(startDate)}</span>
+          {milestones.filter((ms) => ms.m !== target && ms.date).map((ms) => (
+            <span key={ms.m} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${datePct(ms.date!)}%` }}>{fmtDM(ms.date!)}</span>
+          ))}
+          <span className="absolute right-0">{fmtDM(TARGET_DATE)}</span>
+        </div>
+      </div>
+
+      {/* next workout */}
+      <button onClick={() => setTab("workout")} className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-[#2f343b] p-4 text-left">
+        <span className="w-8 text-center text-3xl font-extrabold text-[#e23b30]">{nextWorkout.id}</span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9aa1aa]">Next workout</div>
+          <div className="truncate text-sm font-bold">{nextWorkout.name}</div>
+          <div className="truncate text-[11px] text-[#9aa1aa]">{nextWorkout.subtitle}</div>
+        </div>
+        <span className="shrink-0 text-lg text-[#e23b30]">›</span>
+      </button>
+
+      {/* quick stats */}
+      <div className="grid grid-cols-3 gap-2">
+        <Stat label="7-day avg" value={avg7 ? avg7.toFixed(1) : current.toFixed(1)} unit="kg" />
+        <Stat label="Last 7 days" value={`${last7}`} unit="wk" />
+        <Stat label="To goal" value={toGo.toFixed(1)} unit="kg" tone="good" />
+      </div>
+
+      {/* timeline / projection */}
+      <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
+        <div className="mb-2 flex items-baseline justify-between">
+          <h2 className="text-sm font-bold">Timeline to {target} kg</h2>
+          <span className="text-[10px] text-[#9aa1aa]">glide path · Feb 27</span>
+        </div>
+        <ProjectionChart bodyweight={bodyweight} />
+        <div className="mt-2 flex items-center gap-4 text-[10px] text-[#9aa1aa]">
+          <span className="flex items-center gap-1"><span className="h-0.5 w-4 rounded bg-[#e23b30]" /> actual</span>
+          <span className="flex items-center gap-1"><span className="h-0.5 w-4 rounded bg-[#46b6ab]" /> projected</span>
+        </div>
+      </div>
+
+      {/* health trends — a sparkline per marker, no numbers */}
+      {lipidTrends.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold">Lipid profile</h2>
+            <button onClick={() => setTab("health")} className="text-[10px] text-[#9aa1aa]">details ›</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {lipidTrends.map(trendCard)}
+          </div>
+        </div>
+      )}
+
+      {bodyTrends.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold">Body composition</h2>
+            <button onClick={() => setTab("health")} className="text-[10px] text-[#9aa1aa]">details ›</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {bodyTrends.map(trendCard)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Weight glide-path: actual weigh-ins (solid) + projection to the target date (dashed).
+function ProjectionChart({ bodyweight }: { bodyweight: BodyweightRow[] }) {
+  const today = todayStr();
+  const start = GOAL.startWeight;
+  const target = GOAL.targetWeight;
+  const latest = bodyweight[bodyweight.length - 1];
+  const curDate = latest?.date ?? today;
+  const curVal = latest?.weight ?? start;
+  const startDate = bodyweight[0]?.date ?? today;
+
+  const x0 = Date.parse(startDate);
+  const x1 = Date.parse(TARGET_DATE);
+  const spanX = Math.max(1, x1 - x0);
+
+  const W = 320, H = 150, padL = 24, padR = 12, padT = 12, padB = 20;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const yVals = [start, target, curVal, ...bodyweight.map((b) => b.weight)];
+  const minY = Math.min(...yVals) - 1, maxY = Math.max(...yVals) + 1, rangeY = maxY - minY || 1;
+  const sx = (ms: number) => padL + clamp((ms - x0) / spanX, 0, 1) * plotW;
+  const sy = (v: number) => padT + plotH - ((v - minY) / rangeY) * plotH;
+
+  const actual = bodyweight.map((b) => ({ x: Date.parse(b.date), y: b.weight }));
+  const actualPath = actual.map((p, i) => `${i === 0 ? "M" : "L"} ${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(" ");
+  const projPath = `M ${sx(Date.parse(curDate)).toFixed(1)} ${sy(curVal).toFixed(1)} L ${sx(x1).toFixed(1)} ${sy(target).toFixed(1)}`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Weight projection to target date">
+      {GOAL.milestones.map((m) => (m > minY && m < maxY ? (
+        <g key={m}>
+          <line x1={padL} y1={sy(m)} x2={W - padR} y2={sy(m)} stroke={m === target ? RED : "#ffffff1a"} strokeWidth={m === target ? 1 : 0.5} strokeDasharray={m === target ? "4 3" : "2 3"} />
+          <text x={0} y={sy(m) + 3} fontSize={9} fill={m === target ? RED : "#9aa1aa"}>{m}</text>
+        </g>
+      ) : null))}
+      <line x1={sx(Date.parse(today))} y1={padT} x2={sx(Date.parse(today))} y2={padT + plotH} stroke="#ffffff22" strokeWidth={0.5} />
+      <path d={projPath} stroke="#46b6ab" strokeWidth={1.5} strokeDasharray="5 3" fill="none" />
+      <circle cx={sx(x1)} cy={sy(target)} r={3} fill="#46b6ab" />
+      {actual.length > 1 && <path d={actualPath} stroke={RED} strokeWidth={1.8} fill="none" strokeLinejoin="round" strokeLinecap="round" />}
+      {actual.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={2.2} fill="#0e0f12" stroke={RED} strokeWidth={1.3} />)}
+      {actual.length === 0 && <circle cx={sx(Date.parse(today))} cy={sy(start)} r={2.6} fill="#0e0f12" stroke={RED} strokeWidth={1.4} />}
+      <text x={padL} y={H - 5} fontSize={9} fill="#9aa1aa" textAnchor="start">{fmtDate(startDate)}</text>
+      <text x={W - padR} y={H - 5} fontSize={9} fill="#9aa1aa" textAnchor="end">{fmtDate(TARGET_DATE)}</text>
+    </svg>
+  );
+}
+
 // ============================================================ WORKOUT
-function WorkoutTab({ sessions, sets, ensureSession, saveSet, deleteSet }: {
-  sessions: SessionRow[]; sets: SetRow[];
+function WorkoutTab({ sessions, sets, bodyweightKg, ensureSession, saveSet, deleteSet }: {
+  sessions: SessionRow[]; sets: SetRow[]; bodyweightKg?: number;
   ensureSession: (w: string, d: string) => Promise<string | null>;
   saveSet: (s: string, e: string, n: number, w: number | string, r: number | string) => Promise<void>;
   deleteSet: (id: string) => Promise<void>;
 }) {
   const date = todayStr();
-  const suggested = nextWorkoutId(sessions[0]?.workout_id);
-  const [selected, setSelected] = useState<Workout["id"]>(suggested);
-  const [started, setStarted] = useState(false);
-  const workout = getWorkout(selected)!;
-  const todaySession = sessions.find((s) => s.workout_id === selected && s.date === date);
-  const alreadyLogged = todaySession && sets.some((s) => s.session_id === todaySession.id);
+  // The workout to offer next: if the most recent session isn't finished yet,
+  // resume it (this pins the choice so it can't flip mid-session); once it's
+  // complete, advance to the next in the A→B→C rotation.
+  const mostRecent = sessions[0];
+  const activeSession = mostRecent && !isSessionComplete(mostRecent, sets) ? mostRecent : null;
+  const suggested = activeSession ? activeSession.workout_id : nextWorkoutId(mostRecent?.workout_id);
+  const workout = getWorkout(suggested)!;
+
+  // Being inside a session is held in state (captured at mount for resume), so
+  // completing the last set doesn't yank us out before the "done" screen shows.
+  const [runId, setRunId] = useState<string | null>(activeSession ? activeSession.workout_id : null);
 
   // combined muscles worked this session
   const primary = useMemo(() => Array.from(new Set(workout.exercises.flatMap((e) => e.primary))) as Muscle[], [workout]);
@@ -261,17 +587,16 @@ function WorkoutTab({ sessions, sets, ensureSession, saveSet, deleteSet }: {
     return Array.from(new Set(workout.exercises.flatMap((e) => e.secondary))).filter((m) => !p.has(m as Muscle)) as Muscle[];
   }, [workout, primary]);
 
-  if (started || alreadyLogged) {
-    return <SessionView workout={workout} date={date} sessions={sessions} sets={sets} ensureSession={ensureSession} saveSet={saveSet} deleteSet={deleteSet} onBack={() => setStarted(false)} />;
+  if (runId) {
+    return <SessionView workout={getWorkout(runId)!} date={date} sessions={sessions} sets={sets} bodyweightKg={bodyweightKg} ensureSession={ensureSession} saveSet={saveSet} deleteSet={deleteSet} onBack={() => setRunId(null)} />;
   }
 
   return (
     <div className="space-y-5 py-4">
+      <PageTitle title="Workout" subtitle="Full-body · A / B / C rotation" />
+
       <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#e23b30]">Today&apos;s workout</span>
-          <span className="text-xs text-[#9aa1aa]">auto-selected</span>
-        </div>
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#e23b30]">Today&apos;s workout</span>
         <div className="mt-1 flex items-baseline gap-3">
           <span className="text-3xl font-extrabold text-[#e23b30]">{workout.id}</span>
           <div>
@@ -282,88 +607,207 @@ function WorkoutTab({ sessions, sets, ensureSession, saveSet, deleteSet }: {
         <div className="my-4 flex justify-center">
           <MuscleMap primary={primary} secondary={secondary} width={92} />
         </div>
-        <button onClick={() => setStarted(true)} className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
+        <button onClick={() => setRunId(suggested)} className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
           Start workout
         </button>
-        <p className="mt-3 text-center text-[11px] text-[#9aa1aa]">6 exercises · ~30–45 min · warm up on the treadmill first</p>
       </div>
 
-      {/* manual override of which workout */}
-      <div>
-        <p className="mb-2 text-center text-[11px] text-[#9aa1aa]">Not today&apos;s? Pick another:</p>
-        <div className="flex gap-2">
-          {WORKOUTS.map((w) => (
-            <button key={w.id} onClick={() => setSelected(w.id)}
-              className={`flex-1 rounded-lg border py-2 text-sm font-semibold ${selected === w.id ? "border-[#e23b30] bg-[#e23b30] text-white" : "border-white/10 text-[#9aa1aa]"}`}>
-              {w.id}{suggested === w.id && <span className="ml-1 text-emerald-400">•</span>}
-            </button>
-          ))}
-        </div>
-      </div>
+      <HistorySection sessions={sessions} sets={sets} />
     </div>
   );
 }
 
 // ------------------------------------------------------------ session
-function SessionView({ workout, date, sessions, sets, ensureSession, saveSet, deleteSet, onBack }: {
-  workout: Workout; date: string; sessions: SessionRow[]; sets: SetRow[];
+const FLOOR_LABEL: Record<Floor, string> = {
+  lower: "Lower Body",
+  upper: "Upper Body",
+};
+// Always lower body first (leg machines are on the way in).
+const FLOOR_ORDER: Floor[] = ["lower", "upper"];
+
+function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSession, saveSet, deleteSet, onBack }: {
+  workout: Workout; date: string; sessions: SessionRow[]; sets: SetRow[]; bodyweightKg?: number;
   ensureSession: (w: string, d: string) => Promise<string | null>;
   saveSet: (s: string, e: string, n: number, w: number | string, r: number | string) => Promise<void>;
   deleteSet: (id: string) => Promise<void>;
   onBack: () => void;
 }) {
-  const [startFloor, setStartFloor] = useState<Floor>("lower");
+  const [phase, setPhase] = useState<"overview" | "focused" | "done">("overview");
+  const [current, setCurrent] = useState(0);
   const [timer, setTimer] = useState<number | null>(null);
+
   const groups = byFloor(workout);
   const todaySession = sessions.find((s) => s.workout_id === workout.id && s.date === date);
   const priorSessions = useMemo(() => sessions.filter((s) => s.id !== todaySession?.id), [sessions, todaySession]);
   const priorSets = useMemo(() => sets.filter((s) => s.session_id !== todaySession?.id), [sets, todaySession]);
 
-  const order: Floor[] = startFloor === "lower" ? ["lower", "upper"] : ["upper", "lower"];
-  const floorMeta: Record<Floor, { label: string; icon: string }> = {
-    lower: { label: "Downstairs · legs", icon: "↓" },
-    upper: { label: "Upstairs · upper body", icon: "↑" },
-  };
+  // the exercises in the exact order he'll perform them (lower body first)
+  const sequence = useMemo(() => FLOOR_ORDER.flatMap((f) => groups[f]), [groups]);
+
+  const setsFor = (exId: string) => sets.filter((s) => s.session_id === todaySession?.id && s.exercise_id === exId);
+  const isDone = (ex: Exercise) => setsFor(ex.id).filter((s) => s.weight != null && s.reps != null).length >= ex.sets;
+  const allDone = sequence.length > 0 && sequence.every(isDone);
+
+  // ---------- done: the finish / celebration screen ----------
+  if (phase === "done") {
+    const logged = sets.filter((s) => s.session_id === todaySession?.id && s.weight != null && s.reps != null);
+    const totalSets = logged.length;
+    const estMinutes = Math.round(10 + totalSets * 2.5); // treadmill warm-up + ~2.5 min/set
+    const kg = bodyweightKg ?? GOAL.startWeight;
+    const calories = Math.round(5 * kg * (estMinutes / 60)); // ~5 METs for weight training
+    const stats: { label: string; value: string }[] = [
+      { label: "Sets", value: `${totalSets}` },
+      { label: "Est. time", value: `~${estMinutes} min` },
+      { label: "Est. calories", value: `~${calories} kcal` },
+    ];
+    return (
+      <div className="flex min-h-[68vh] flex-col items-center justify-center gap-6 py-10 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 text-4xl text-emerald-400">✓</div>
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">Workout complete</h2>
+          <p className="mt-1 text-sm text-[#9aa1aa]">{workout.id} · {workout.name}</p>
+        </div>
+        <div className="grid w-full grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-2xl border border-white/10 bg-[#2f343b] p-3 text-center">
+              <div className="text-base font-bold tabular-nums">{s.value}</div>
+              <div className="mt-0.5 text-[11px] text-[#9aa1aa]">{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-[#9aa1aa]/70">Time & calories are rough estimates from your sets and bodyweight.</p>
+        <button onClick={onBack} className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
+          Back to home
+        </button>
+      </div>
+    );
+  }
+
+  async function logSet(ex: Exercise, setNumber: number, weight: number | string, reps: number | string) {
+    const sid = todaySession?.id ?? (await ensureSession(workout.id, date));
+    if (sid) await saveSet(sid, ex.id, setNumber, weight, reps);
+    setTimer(90);
+  }
+
+  // ---------- overview: the plan for today, then a Start button ----------
+  if (phase === "overview") {
+    const anyDone = sequence.some(isDone);
+    return (
+      <div className="space-y-5 py-4">
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="text-xs text-[#9aa1aa]">‹ Back</button>
+          <div className="text-sm font-bold">{workout.id} · {workout.name}</div>
+          <span className="w-10" />
+        </div>
+
+        {FLOOR_ORDER.map((floor) => (
+          <div key={floor} className="space-y-2">
+            <div className="pt-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#9aa1aa]">{FLOOR_LABEL[floor]}</span>
+            </div>
+            {groups[floor].map((ex) => {
+              const p = prescribe(ex, priorSets, priorSessions);
+              const done = isDone(ex);
+              return (
+                <button key={ex.id} onClick={() => { setCurrent(sequence.indexOf(ex)); setPhase("focused"); }}
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#2f343b] px-3 py-2.5 text-left">
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${done ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-[#9aa1aa]"}`}>
+                    {done ? "✓" : sequence.indexOf(ex) + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{ex.name}</div>
+                    <div className="text-[11px] text-[#9aa1aa]">{ex.sets} × {p.reps} @ {p.weight} kg{ex.supersetGroup ? " · superset" : ""}</div>
+                  </div>
+                  <span className="text-lg text-[#9aa1aa]">›</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+
+        <button
+          onClick={() => { if (allDone) { setPhase("done"); } else { setCurrent(0); setPhase("focused"); } }}
+          className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
+          {allDone ? "Finish workout" : anyDone ? "Resume workout" : "Start"}
+        </button>
+      </div>
+    );
+  }
+
+  // ---------- focused: one exercise at a time, next peeking at the bottom ----------
+  const ex = sequence[current];
+  const prev = sequence[current - 1] ?? null;
+  const next = sequence[current + 1] ?? null;
+  const prevDone = prev ? isDone(prev) : false;
+  const nextDone = next ? isDone(next) : false;
+  const isLast = current >= sequence.length - 1;
 
   return (
-    <div className="space-y-5 py-4">
+    <div className="space-y-4 py-4 pb-28">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-xs text-[#9aa1aa]">‹ Back</button>
-        <div className="text-sm font-bold">{workout.id} · {workout.name}</div>
-        <span className="w-10" />
+        <button onClick={() => setPhase("overview")} className="text-xs text-[#9aa1aa]">‹ Overview</button>
+        <div className="text-xs font-semibold text-[#9aa1aa]">{current + 1} of {sequence.length}</div>
+        <span className="w-16" />
       </div>
 
-      <div className="flex gap-2">
-        {(["lower", "upper"] as Floor[]).map((f) => (
-          <button key={f} onClick={() => setStartFloor(f)}
-            className={`flex-1 rounded-lg border py-2 text-xs font-semibold ${startFloor === f ? "border-[#e23b30] bg-[#e23b30]/15 text-white" : "border-white/10 text-[#9aa1aa]"}`}>
-            Start {floorMeta[f].icon} {f === "lower" ? "downstairs" : "upstairs"}
-          </button>
+      {/* progress across the session */}
+      <div className="flex gap-1">
+        {sequence.map((s, i) => (
+          <span key={s.id} className={`h-1 flex-1 rounded-full ${isDone(s) ? "bg-emerald-500/60" : i === current ? "bg-[#e23b30]" : "bg-white/10"}`} />
         ))}
       </div>
 
-      {order.map((floor) => (
-        <div key={floor} className="space-y-3">
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-lg">{floorMeta[floor].icon}</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#9aa1aa]">{floorMeta[floor].label}</span>
-          </div>
-          {groups[floor].map((ex, i) => (
-            <ExerciseCard key={ex.id} exercise={ex} index={workout.exercises.indexOf(ex) + 1}
-              todaySessionId={todaySession?.id ?? null}
-              todaySets={sets.filter((s) => s.session_id === todaySession?.id && s.exercise_id === ex.id)}
-              prescription={prescribe(ex, priorSets, priorSessions)}
-              last={lastTime(ex, priorSets, priorSessions)}
-              onConfirm={async (setNumber, weight, reps) => {
-                const sid = todaySession?.id ?? (await ensureSession(workout.id, date));
-                if (sid) await saveSet(sid, ex.id, setNumber, weight, reps);
-                setTimer(90);
-              }}
-              onDeleteSet={deleteSet}
-            />
-          ))}
+      <ExerciseCard exercise={ex} index={current + 1}
+        todaySessionId={todaySession?.id ?? null}
+        todaySets={setsFor(ex.id)}
+        prescription={prescribe(ex, priorSets, priorSessions)}
+        last={lastTime(ex, priorSets, priorSessions)}
+        onConfirm={(setNumber, weight, reps) => logSet(ex, setNumber, weight, reps)}
+        onDeleteSet={deleteSet}
+      />
+
+      {/* split prev / next bar, pinned above the tab bar; yields to the rest timer */}
+      {timer === null && (
+        <div className="fixed inset-x-0 bottom-16 z-40 mx-auto flex max-w-md items-stretch border-t border-white/10 bg-[#191b20]/95 backdrop-blur"
+          style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
+          {/* previous */}
+          <button
+            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+            disabled={prev === null}
+            className="flex flex-1 items-center gap-2 border-r border-white/10 px-4 py-3 text-left disabled:opacity-30">
+            <span className="shrink-0 text-lg text-[#9aa1aa]">‹</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#9aa1aa]">
+                Previous
+                {prev && (prevDone
+                  ? <span className="text-emerald-400">✓</span>
+                  : <span className="h-1.5 w-1.5 rounded-full bg-white/25" />)}
+              </div>
+              <div className="truncate text-sm font-semibold">{prev ? prev.name : "—"}</div>
+            </div>
+          </button>
+
+          {/* next / finish */}
+          <button
+            onClick={() => (isLast ? setPhase("done") : setCurrent((c) => c + 1))}
+            className="flex flex-1 items-center justify-end gap-2 px-4 py-3 text-right">
+            {isLast ? (
+              <span className="text-sm font-bold text-emerald-400">Finish workout ✓</span>
+            ) : (
+              <>
+                <div className="min-w-0">
+                  <div className="flex items-center justify-end gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#9aa1aa]">
+                    {nextDone && <span className="text-emerald-400">✓</span>}
+                    Up next
+                  </div>
+                  <div className="truncate text-sm font-semibold">{next!.name}</div>
+                </div>
+                <span className="shrink-0 text-lg text-[#e23b30]">›</span>
+              </>
+            )}
+          </button>
         </div>
-      ))}
+      )}
 
       {timer !== null && <RestTimer key={timer} seconds={timer} onClose={() => setTimer(null)} />}
     </div>
@@ -522,8 +966,8 @@ function RestTimer({ seconds, onClose }: { seconds: number; onClose: () => void 
   );
 }
 
-// ============================================================ HISTORY
-function HistoryTab({ sessions, sets }: { sessions: SessionRow[]; sets: SetRow[] }) {
+// ============================================================ HISTORY (embedded in Workout)
+function HistorySection({ sessions, sets }: { sessions: SessionRow[]; sets: SetRow[] }) {
   const withData = useMemo(() => {
     const ids = new Set(sets.map((s) => s.exercise_id));
     return WORKOUTS.flatMap((w) => w.exercises).filter((e) => ids.has(e.id));
@@ -543,10 +987,10 @@ function HistoryTab({ sessions, sets }: { sessions: SessionRow[]; sets: SetRow[]
     return Array.from(bySession.values()).sort((a, b) => a.date.localeCompare(b.date)).map((d) => ({ x: d.date, y: d.top }));
   }, [chartEx, sets, sessions]);
 
-  if (!sessions.length) return <div className="py-20 text-center text-sm text-[#9aa1aa]">No sessions yet.<br />Log a set in Workout to begin.</div>;
+  if (!sessions.length) return null;
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-5 pt-2">
       {withData.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-bold">Progress</h2>
@@ -557,8 +1001,8 @@ function HistoryTab({ sessions, sets }: { sessions: SessionRow[]; sets: SetRow[]
         </section>
       )}
       <section>
-        <h2 className="mb-2 text-sm font-bold">Sessions</h2>
-        <div className="space-y-2">{sessions.map((s) => <SessionItem key={s.id} session={s} sets={sets.filter((x) => x.session_id === s.id)} />)}</div>
+        <h2 className="mb-2 text-sm font-bold">History</h2>
+        <div className="space-y-2">{[...sessions].sort((a, b) => a.date.localeCompare(b.date)).map((s) => <SessionItem key={s.id} session={s} sets={sets.filter((x) => x.session_id === s.id)} />)}</div>
       </section>
     </div>
   );
@@ -620,6 +1064,8 @@ function WeightTab({ bodyweight, saveBodyweight }: { bodyweight: BodyweightRow[]
 
   return (
     <div className="space-y-6 py-4">
+      <PageTitle title="Weight" subtitle="Tracking toward 75 kg" />
+
       <form onSubmit={submit} className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
         <label className="mb-2 block text-sm font-bold">Today&apos;s weight</label>
         <div className="flex gap-2">
@@ -673,7 +1119,7 @@ function Stat({ label, value, unit, tone }: { label: string; value: string; unit
 }
 
 // ============================================================ HEALTH
-function HealthTab({ reports, metrics, pw, onUploaded, onDelete }: { reports: ReportRow[]; metrics: MetricRow[]; pw: string; onUploaded: () => void; onDelete: (id: string) => Promise<void> }) {
+function HealthTab({ reports, metrics, testMode, onUploaded, onDelete }: { reports: ReportRow[]; metrics: MetricRow[]; testMode: boolean; onUploaded: () => void; onDelete: (id: string) => Promise<void> }) {
   const [type, setType] = useState<"inbody" | "lab">("lab");
   const [date, setDate] = useState(todayStr());
   const [uploading, setUploading] = useState(false);
@@ -681,10 +1127,15 @@ function HealthTab({ reports, metrics, pw, onUploaded, onDelete }: { reports: Re
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function upload(file: File) {
+    if (testMode) {
+      setError("Test mode — file wasn't uploaded or parsed.");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     setUploading(true); setError("");
     const fd = new FormData();
     fd.append("file", file); fd.append("type", type); fd.append("date", date);
-    const res = await fetch("/api/training/health/upload", { method: "POST", headers: { Authorization: `Bearer ${pw}` }, body: fd });
+    const res = await fetch("/api/training/health/upload", { method: "POST", body: fd });
     setUploading(false);
     if (res.ok) { onUploaded(); if (fileRef.current) fileRef.current.value = ""; }
     else { const j = await res.json().catch(() => ({})); setError(j.error || "Upload failed"); }
@@ -700,6 +1151,8 @@ function HealthTab({ reports, metrics, pw, onUploaded, onDelete }: { reports: Re
 
   return (
     <div className="space-y-6 py-4">
+      <PageTitle title="Health" subtitle="InBody & lab reports" />
+
       <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
         <div className="mb-3 flex gap-2">
           {(["lab", "inbody"] as const).map((t) => (
@@ -765,13 +1218,28 @@ function HealthTab({ reports, metrics, pw, onUploaded, onDelete }: { reports: Re
         </section>
       )}
       {reports.length === 0 && <p className="py-8 text-center text-sm text-[#9aa1aa]">No reports yet. Upload your InBody scan or lipid panel above.</p>}
+
+      <Credits />
     </div>
   );
 }
 
+// Attribution for the open-source assets (Everkinetic is CC BY-SA 3.0, which
+// asks for credit). Tucked at the bottom of the Health tab so it stays present
+// without cluttering the workout flow.
+function Credits() {
+  return (
+    <footer className="px-1 pb-4 pt-8 text-center text-[10px] leading-relaxed text-[#9aa1aa]/60">
+      Exercise illustrations:{" "}
+      <a href="https://github.com/everkinetic/data" className="underline underline-offset-2" target="_blank" rel="noreferrer">Everkinetic</a>{" "}
+      (CC BY-SA 3.0) · Muscle map: react-body-highlighter (MIT)
+    </footer>
+  );
+}
+
 // ============================================================ shared line chart (dark)
-function LineChart({ points, unit, goal, milestones, compact }: {
-  points: { x: string; y: number }[]; unit: string; goal?: number; milestones?: number[]; compact?: boolean;
+function LineChart({ points, unit, goal, milestones, compact, color = RED }: {
+  points: { x: string; y: number }[]; unit: string; goal?: number; milestones?: number[]; compact?: boolean; color?: string;
 }) {
   if (points.length === 0) return <p className="py-6 text-center text-xs text-[#9aa1aa]">No data yet.</p>;
   if (points.length === 1) return <p className="py-4 text-center text-sm"><span className="text-lg font-bold">{points[0].y}</span><span className="ml-1 text-xs text-[#9aa1aa]">{unit} · need 2+ for a trend</span></p>;
@@ -800,9 +1268,9 @@ function LineChart({ points, unit, goal, milestones, compact }: {
       {milestones?.filter((m) => m > minY && m < maxY && m !== goal).map((m) => (
         <line key={m} x1={padL} y1={cy(m)} x2={W - padR} y2={cy(m)} stroke="#ffffff22" strokeWidth={0.5} strokeDasharray="2 3" />
       ))}
-      <path d={area} fill="#e23b3018" />
-      <path d={path} stroke={RED} strokeWidth={1.6} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-      {points.map((p, i) => <circle key={i} cx={cx(i)} cy={cy(p.y)} r={compact ? 1.8 : 2.5} fill="#0e0f12" stroke={RED} strokeWidth={1.4} />)}
+      <path d={area} fill={color} fillOpacity={0.09} />
+      <path d={path} stroke={color} strokeWidth={1.6} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((p, i) => <circle key={i} cx={cx(i)} cy={cy(p.y)} r={compact ? 1.8 : 2.5} fill="#0e0f12" stroke={color} strokeWidth={1.4} />)}
       {!compact && [0, points.length - 1].map((idx) => (
         <text key={idx} x={cx(idx)} y={H - 4} textAnchor={idx === 0 ? "start" : "end"} fill="#9aa1aa" fontSize={9}>{fmtDate(points[idx].x)}</text>
       ))}
