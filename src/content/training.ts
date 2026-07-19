@@ -424,6 +424,42 @@ export const WARMUP_STRETCHES: WarmupStretch[] = [
   { id: "bw-squats", name: "Bodyweight squats", amount: "10", cue: "Slow tempo, full depth, arms out front." },
 ];
 
+// ------------------------------------------------------------ program timeline
+// The long-game roadmap, paced by sessions actually completed (not calendar
+// dates — missed weeks just stretch the timeline instead of lying about it).
+// Phase changes aren't automatic: the strip in the Workout tab shows where the
+// program is heading; the actual changes get designed together when a boundary
+// nears.
+export interface ProgramPhase {
+  id: string;
+  name: string;
+  /** Lifted-sessions count at which this phase begins. */
+  startAtSessions: number;
+  /** One-liner: what this phase is about / what changes. */
+  summary: string;
+}
+
+export const PROGRAM_PHASES: ProgramPhase[] = [
+  {
+    id: "foundation",
+    name: "Foundation",
+    startAtSessions: 0,
+    summary: "Current A/B/C — build the habit, groove form, let the engine add weight.",
+  },
+  {
+    id: "load-up",
+    name: "Load up",
+    startAtSessions: 30,
+    summary: "Barbell graduations: goblet → back squat, weighted lunges, heavier presses.",
+  },
+  {
+    id: "refresh",
+    name: "Refresh",
+    startAtSessions: 60,
+    summary: "Program review — swap stale exercises or move to a 4-day split.",
+  },
+];
+
 export const WORKOUT_ORDER: Array<Workout["id"]> = ["A", "B", "C"];
 
 export function getWorkout(id: string): Workout | undefined {

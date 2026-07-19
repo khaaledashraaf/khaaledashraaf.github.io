@@ -11,6 +11,7 @@ import {
   byFloor,
   WARMUP_TREADMILL,
   WARMUP_STRETCHES,
+  PROGRAM_PHASES,
   type Workout,
   type Exercise,
   type Floor,
@@ -638,6 +639,64 @@ function WorkoutTab({ sessions, sets, bodyweightKg, ensureSession, saveSet, dele
       </div>
 
       <HistorySection sessions={sessions} sets={sets} />
+
+      <ProgramStrip sessions={sessions} sets={sets} />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ program strip
+// Quiet roadmap footer: which phase the program is in and what comes next,
+// paced by lifted sessions. Deliberately muted — it's orientation, not a
+// deadline. Phase changes get designed together when a boundary nears.
+function ProgramStrip({ sessions, sets }: { sessions: SessionRow[]; sets: SetRow[] }) {
+  const done = sessions.filter((s) => hasLifts(s, sets)).length;
+
+  let idx = 0;
+  for (let i = 0; i < PROGRAM_PHASES.length; i++) {
+    if (done >= PROGRAM_PHASES[i].startAtSessions) idx = i;
+  }
+  const phase = PROGRAM_PHASES[idx];
+  const next = PROGRAM_PHASES[idx + 1] ?? null;
+
+  // Rough ETA for the next phase from actual pace (sessions in the last 28
+  // days), falling back to the planned 3/week before there's enough history.
+  let eta: string | null = null;
+  if (next) {
+    const cutoff = Date.parse(todayStr()) - 28 * 86400000;
+    const recent = sessions.filter((s) => hasLifts(s, sets) && Date.parse(s.date) >= cutoff).length;
+    const perWeek = recent >= 4 ? recent / 4 : 3;
+    const weeksLeft = (next.startAtSessions - done) / perWeek;
+    const etaStr = addDays(todayStr(), Math.round(weeksLeft * 7));
+    const [ey, em] = etaStr.split("-").map(Number);
+    eta = new Date(ey, em - 1, 1).toLocaleDateString("en-US", { month: "short" });
+  }
+
+  const remaining = next ? next.startAtSessions - done : 0;
+  const span = next ? next.startAtSessions - phase.startAtSessions : 1;
+  const pct = next ? clamp(((done - phase.startAtSessions) / span) * 100, 0, 100) : 100;
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#191b20] px-3 py-2.5">
+      <div className="flex items-baseline justify-between gap-3 text-[11px]">
+        <span className="font-semibold text-[#c9ccd1]">
+          {phase.name}
+          <span className="ml-1.5 font-normal text-[#9aa1aa] tabular-nums">{done} session{done === 1 ? "" : "s"}</span>
+        </span>
+        {next ? (
+          <span className="text-right text-[#9aa1aa]">
+            {remaining <= 3
+              ? `${next.name} in ${remaining} session${remaining === 1 ? "" : "s"} — we'll plan it together`
+              : `next: ${next.name} at ${next.startAtSessions} · ≈ ${eta}`}
+          </span>
+        ) : (
+          <span className="text-right text-[#9aa1aa]">final phase — review whenever</span>
+        )}
+      </div>
+      <div className="mt-1.5 h-0.5 rounded-full bg-white/10">
+        <div className="h-full rounded-full bg-white/25" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="mt-1.5 text-[10px] leading-relaxed text-[#9aa1aa]/70">{next ? next.summary : phase.summary}</p>
     </div>
   );
 }
