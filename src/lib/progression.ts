@@ -60,20 +60,23 @@ export function prescribe(
 
 function progressFrom(ex: Exercise, sets: SetRow[]): Prescription {
   const [min, max] = ex.repRange;
-  const weights = sets.map((s) => s.weight as number);
-  const workW = Math.max(...weights); // top working weight last time
-  const repsAtW = sets
+  const ordered = [...sets].sort((a, b) => a.set_number - b.set_number);
+  // Anchor on the weight you *settled* on (the last set), not the heaviest you
+  // touched. Ramping up mid-session and backing off shouldn't trap you at a load
+  // you already judged too heavy — the final set is the honest working weight.
+  const workW = ordered[ordered.length - 1].weight as number;
+  const repsAtW = ordered
     .filter((s) => s.weight === workW)
     .map((s) => s.reps as number);
   const hitTop =
     repsAtW.length >= 1 &&
     repsAtW.every((r) => r >= max) &&
-    sets.length >= ex.sets;
+    ordered.length >= ex.sets;
 
   if (hitTop) {
     return { weight: round(workW + ex.increment), reps: min, seed: false };
   }
-  const worst = Math.min(...sets.map((s) => s.reps as number));
+  const worst = Math.min(...repsAtW);
   return { weight: workW, reps: clamp(worst + 1, min, max), seed: false };
 }
 

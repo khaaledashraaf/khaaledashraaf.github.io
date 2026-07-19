@@ -20,6 +20,11 @@ export type Muscle =
 
 export type Floor = "upper" | "lower"; // upstairs = upper body, downstairs = legs
 
+/** How a prescribed weight is loaded, for an unambiguous on-card unit label:
+ * dumbbells → per hand, barbell / plate-loaded machine → per side, pin stack →
+ * total, unweighted → bodyweight. */
+export type LoadType = "per-hand" | "per-side" | "total" | "bodyweight";
+
 export interface Exercise {
   /** Stable id — logs are keyed to this. Never change once data exists. */
   id: string;
@@ -36,6 +41,9 @@ export interface Exercise {
   startWeight: number;
   /** kg added when a lift graduates (double progression). */
   increment: number;
+  /** How the prescribed weight is loaded — drives the on-card unit label so
+   * "10 kg" is never ambiguous (each hand? each side? total stack?). */
+  load: LoadType;
   /** Per-leg / per-arm rep target, shown as "× n / side". */
   perSide?: boolean;
   cues: string[];
@@ -74,6 +82,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 7.5,
         increment: 2.5,
+        load: "per-hand",
         cues: [
           "Bench at ~30°. Tuck elbows into an arrow on the way down.",
           "Press up and back toward your collarbone.",
@@ -91,6 +100,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [6, 8],
         startWeight: 12,
         increment: 2.5,
+        load: "total",
         cues: [
           "Heels on a small plate to stay upright and bias the quads.",
           "Brace your core, sit down between your hips.",
@@ -109,6 +119,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 12,
         increment: 2.5,
+        load: "per-hand",
         cues: [
           "Chest down on a ~45° bench, elbows in an arrow.",
           "Squeeze shoulder blades at the top, forearms vertical.",
@@ -127,6 +138,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 25,
         increment: 5,
+        load: "total",
         cues: [
           "Stop just short of locking out — keep tension off the calves.",
           "Squeeze hard, slow negative.",
@@ -143,6 +155,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 10,
         increment: 2.5,
+        load: "per-hand",
         cues: ["Elbows back and pinned.", "Full stretch at the bottom."],
         supersetGroup: "a-arms",
       },
@@ -157,6 +170,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 10,
         increment: 2.5,
+        load: "total",
         cues: ["Elbows high and still.", "Deep stretch behind the head."],
         supersetGroup: "a-arms",
       },
@@ -170,35 +184,41 @@ export const WORKOUTS: Workout[] = [
     exercises: [
       {
         id: "b-flat-db-press",
-        name: "Flat Dumbbell Press",
+        name: "Chest Press Machine",
         floor: "upper",
         target: "Chest",
         primary: ["chest"],
         secondary: ["front-deltoids", "triceps"],
         sets: 3,
         repRange: [8, 12],
-        startWeight: 12,
+        startWeight: 10,
         increment: 2.5,
-        cues: ["Shoulder blades pinned back and down.", "Control the negative."],
-        buildTo: "barbell bench press (4–6 reps)",
+        load: "per-side",
+        cues: [
+          "Set the seat so the handles sit at mid-chest.",
+          "Shoulder blades pinned back and down.",
+          "Press smoothly, control the negative — don't slam the lockout.",
+        ],
       },
       {
-        id: "b-rdl",
-        name: "Dumbbell Romanian Deadlift",
+        id: "b-deadlift",
+        name: "Barbell Deadlift",
         floor: "lower",
-        target: "Hamstrings / glutes",
-        primary: ["hamstring", "gluteal"],
-        secondary: ["lower-back"],
+        target: "Posterior chain",
+        primary: ["hamstring", "gluteal", "lower-back"],
+        secondary: ["quadriceps", "upper-back", "trapezius"],
         sets: 3,
-        repRange: [6, 8],
-        startWeight: 14,
-        increment: 2.5,
+        repRange: [5, 8],
+        startWeight: 30,
+        increment: 5,
+        load: "total",
         cues: [
-          "Soft knees, push hips back, bar/dumbbells close to legs.",
-          "Feel the hamstring stretch, then drive hips forward.",
-          "Stop when hips can't push back further — don't round.",
+          "Start light — grooving the pattern matters more than the number.",
+          "Bar over mid-foot, shins almost touching. Grip just outside the knees.",
+          "Chest up, flat back, pull the slack out of the bar before you lift.",
+          "Push the floor away — hips and shoulders rise together, bar drags up the legs.",
+          "Lock out by squeezing the glutes; don't lean back. Same path down.",
         ],
-        buildTo: "barbell RDL",
       },
       {
         id: "b-lat-pulldown",
@@ -209,8 +229,9 @@ export const WORKOUTS: Workout[] = [
         secondary: ["biceps", "back-deltoids"],
         sets: 3,
         repRange: [8, 12],
-        startWeight: 40,
+        startWeight: 30,
         increment: 5,
+        load: "total",
         cues: ["Wide grip, lean back slightly.", "Drive elbows down to the ribs."],
         finisher: "Last set: 3–5 half-reps from the stretch after failure.",
       },
@@ -223,25 +244,28 @@ export const WORKOUTS: Workout[] = [
         secondary: ["hamstring"],
         sets: 3,
         repRange: [8, 10],
-        startWeight: 10,
+        startWeight: 0,
         increment: 2.5,
+        load: "per-hand",
         perSide: true,
         cues: [
+          "Start bodyweight — add dumbbells only once every rep feels easy.",
           "Wide step, torso leaned slightly forward for the glutes.",
           "Back knee hovers just above the floor.",
         ],
       },
       {
         id: "b-lateral-raise",
-        name: "Cable Lateral Raise",
+        name: "Dumbbell Lateral Raise",
         floor: "upper",
         target: "Side delts",
         primary: ["front-deltoids", "back-deltoids"],
         secondary: ["trapezius"],
         sets: 3,
         repRange: [12, 15],
-        startWeight: 7,
+        startWeight: 6,
         increment: 2,
+        load: "per-hand",
         cues: ["Lead with the elbow.", "Slow and strict — no swinging."],
         supersetGroup: "b-delts-abs",
       },
@@ -256,6 +280,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [10, 15],
         startWeight: 0,
         increment: 0,
+        load: "bodyweight",
         cues: ["Curl the pelvis, knees toward chest.", "Slow, controlled descent."],
         supersetGroup: "b-delts-abs",
       },
@@ -278,6 +303,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 12,
         increment: 2.5,
+        load: "per-hand",
         cues: [
           "Bench 1–2 notches back from upright.",
           "Elbows flare out as you press, tuck in front as you lower.",
@@ -294,6 +320,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [8, 12],
         startWeight: 16,
         increment: 2.5,
+        load: "per-hand",
         cues: [
           "Elbow tight to your side, drive it back toward your hip.",
           "Forearm vertical — don't curl the weight. Don't rotate the torso.",
@@ -301,21 +328,22 @@ export const WORKOUTS: Workout[] = [
         finisher: "Last set: 3–5 half-reps from the stretch after failure.",
       },
       {
-        id: "c-hip-thrust",
-        name: "Hip Thrust",
+        id: "c-leg-press",
+        name: "Leg Press",
         floor: "lower",
-        target: "Glutes",
-        primary: ["gluteal"],
-        secondary: ["hamstring"],
+        target: "Quads / glutes",
+        primary: ["quadriceps", "gluteal"],
+        secondary: ["hamstring", "adductor"],
         sets: 3,
         repRange: [10, 15],
-        startWeight: 30,
-        increment: 5,
+        startWeight: 40,
+        increment: 10,
+        load: "total",
         cues: [
-          "Brace the core, squeeze the glutes hard at the top.",
-          "Flat back at the top — don't arch the lower back.",
+          "Feet mid-platform, about shoulder-width. Push through your whole foot.",
+          "Lower under control until your knees reach roughly 90°.",
+          "Don't slam the knees straight at the top; keep your lower back flat on the pad.",
         ],
-        buildTo: "swap for DB step-ups if the setup is a hassle",
       },
       {
         id: "c-leg-extension",
@@ -328,6 +356,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [10, 15],
         startWeight: 30,
         increment: 5,
+        load: "total",
         cues: ["Lean back to bias the rectus femoris.", "Pause and squeeze at the top."],
       },
       {
@@ -341,6 +370,7 @@ export const WORKOUTS: Workout[] = [
         repRange: [10, 15],
         startWeight: 10,
         increment: 2.5,
+        load: "total",
         cues: ["Slight pad behind the back for a deeper stretch.", "Squeeze at the midline."],
         finisher: "Last set: 3–5 half-reps from the stretch after failure.",
       },
@@ -355,22 +385,8 @@ export const WORKOUTS: Workout[] = [
         repRange: [10, 15],
         startWeight: 40,
         increment: 5,
+        load: "total",
         cues: ["Pause at the bottom for a deep stretch.", "Full range, no bouncing."],
-        supersetGroup: "c-calves-reardelts",
-      },
-      {
-        id: "c-reverse-fly",
-        name: "Reverse Cable Fly",
-        floor: "upper",
-        target: "Rear delts",
-        primary: ["back-deltoids"],
-        secondary: ["upper-back", "trapezius"],
-        sets: 3,
-        repRange: [12, 15],
-        startWeight: 7,
-        increment: 2,
-        cues: ["Cables crossed, sweep the arms outward.", "Let the arms cross at the start for a stretch."],
-        supersetGroup: "c-calves-reardelts",
       },
     ],
   },
@@ -400,6 +416,20 @@ export function nextWorkoutId(lastId?: string | null): Workout["id"] {
 
 export function repRangeLabel(range: [number, number]): string {
   return range[0] === range[1] ? `${range[0]}` : `${range[0]}–${range[1]}`;
+}
+
+/** Short unit suffix for a prescribed weight: "/ hand", "/ side", "total", "". */
+export function loadSuffix(load: LoadType): string {
+  switch (load) {
+    case "per-hand":
+      return "/ hand";
+    case "per-side":
+      return "/ side";
+    case "total":
+      return "total";
+    default:
+      return "";
+  }
 }
 
 /** Group a workout's exercises by floor, preserving order within each floor. */

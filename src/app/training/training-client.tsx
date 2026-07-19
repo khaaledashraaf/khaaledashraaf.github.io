@@ -7,10 +7,12 @@ import {
   getExercise,
   nextWorkoutId,
   repRangeLabel,
+  loadSuffix,
   byFloor,
   type Workout,
   type Exercise,
   type Floor,
+  type LoadType,
   type Muscle,
 } from "@/content/training";
 import {
@@ -71,7 +73,12 @@ function isSessionComplete(session: SessionRow, allSets: SetRow[]): boolean {
 // else advance the A→B→C rotation past the most recent one.
 function nextWorkoutToDo(sessions: SessionRow[], sets: SetRow[]): string {
   const mostRecent = sessions[0];
-  const active = mostRecent && !isSessionComplete(mostRecent, sets) ? mostRecent : null;
+  // Only *today's* unfinished session is resumable — a past-day session is done,
+  // finished or not; you never go back to complete yesterday's workout.
+  const active =
+    mostRecent && mostRecent.date === todayStr() && !isSessionComplete(mostRecent, sets)
+      ? mostRecent
+      : null;
   return active ? active.workout_id : nextWorkoutId(mostRecent?.workout_id);
 }
 function addDays(dateStr: string, n: number): string {
@@ -572,7 +579,11 @@ function WorkoutTab({ sessions, sets, bodyweightKg, ensureSession, saveSet, dele
   // resume it (this pins the choice so it can't flip mid-session); once it's
   // complete, advance to the next in the A→B→C rotation.
   const mostRecent = sessions[0];
-  const activeSession = mostRecent && !isSessionComplete(mostRecent, sets) ? mostRecent : null;
+  // Resume only today's unfinished session; a prior-day session is done for good.
+  const activeSession =
+    mostRecent && mostRecent.date === date && !isSessionComplete(mostRecent, sets)
+      ? mostRecent
+      : null;
   const suggested = activeSession ? activeSession.workout_id : nextWorkoutId(mostRecent?.workout_id);
   const workout = getWorkout(suggested)!;
 
@@ -716,7 +727,7 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{ex.name}</div>
-                    <div className="text-[11px] text-[#9aa1aa]">{ex.sets} × {p.reps} @ {p.weight} kg{ex.supersetGroup ? " · superset" : ""}</div>
+                    <div className="text-[11px] text-[#9aa1aa]">{ex.sets} × {p.reps} · {weightLabel(p.weight, ex.load)}{ex.supersetGroup ? " · superset" : ""}</div>
                   </div>
                   <span className="text-lg text-[#9aa1aa]">›</span>
                 </button>
@@ -814,6 +825,22 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
   );
 }
 
+// Prescribed-weight label with its unit spelled out, e.g. "10 kg / side".
+// Bodyweight / zero-load moves read "Bodyweight".
+function weightLabel(weight: number, load: LoadType): string {
+  if (load === "bodyweight" || weight <= 0) return "Bodyweight";
+  const s = loadSuffix(load);
+  return s ? `${weight} kg ${s}` : `${weight} kg`;
+}
+
+// Compact unit label for a logged/target set, e.g. "10 kg/side", "6 kg/hand", "BW".
+function weightShort(weight: number, load: LoadType): string {
+  if (load === "bodyweight" || weight <= 0) return "BW";
+  if (load === "per-hand") return `${weight} kg/hand`;
+  if (load === "per-side") return `${weight} kg/side`;
+  return `${weight} kg`;
+}
+
 // ------------------------------------------------------------ exercise card
 function ExerciseCard({ exercise, index, todaySessionId, todaySets, prescription, last, onConfirm, onDeleteSet }: {
   exercise: Exercise; index: number; todaySessionId: string | null; todaySets: SetRow[];
@@ -855,9 +882,21 @@ function ExerciseCard({ exercise, index, todaySessionId, todaySets, prescription
             {prescription.seed ? "Suggested start" : "Prescribed today"}
           </span>
           <span className="text-sm font-bold">
-            {exercise.sets} × {prescription.reps} <span className="text-[#e23b30]">@ {prescription.weight} kg</span>
+            {exercise.sets} × {prescription.reps}{" "}
+            <span className="text-[#e23b30]">
+              {exercise.load === "bodyweight" || prescription.weight <= 0
+                ? "Bodyweight"
+                : `@ ${weightLabel(prescription.weight, exercise.load)}`}
+            </span>
           </span>
         </div>
+        {prescription.seed && (
+          <div className="mb-2 rounded-lg border border-[#e23b30]/25 bg-[#e23b30]/5 px-3 py-2 text-[11px] leading-relaxed text-[#c9ccd1]">
+            <span className="font-semibold text-[#e8a39d]">First time on this lift</span> — pick a weight you could do{" "}
+            <b className="text-white">5+ more reps</b> with; it should feel easy. Stop if your form breaks — the app adds
+            weight for you each session, so there&rsquo;s no rush to go heavy.
+          </div>
+        )}
         {last && (
           <p className="mb-2 text-[11px] text-[#9aa1aa]">
             Last ({fmtDate(last.date)}): {last.sets.map((s) => `${s.weight}×${s.reps}`).join("  ")}
@@ -872,7 +911,7 @@ function ExerciseCard({ exercise, index, todaySessionId, todaySets, prescription
                 target={prescription}
                 onConfirm={(w, r) => onConfirm(setNumber, w, r)}
                 onDelete={existing ? () => onDeleteSet(existing.id) : undefined}
-                perSide={exercise.perSide} />
+                load={exercise.load} perSide={exercise.perSide} />
             );
           })}
         </div>
@@ -889,11 +928,11 @@ function ExerciseCard({ exercise, index, todaySessionId, todaySets, prescription
   );
 }
 
-function SetRow({ setNumber, existing, target, onConfirm, onDelete, perSide }: {
+function SetRow({ setNumber, existing, target, onConfirm, onDelete, load, perSide }: {
   setNumber: number; existing?: SetRow;
   target: { weight: number; reps: number };
   onConfirm: (w: number | string, r: number | string) => void | Promise<void>;
-  onDelete?: () => void; perSide?: boolean;
+  onDelete?: () => void; load: LoadType; perSide?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [w, setW] = useState(String(existing?.weight ?? target.weight));
@@ -910,7 +949,7 @@ function SetRow({ setNumber, existing, target, onConfirm, onDelete, perSide }: {
       <div className="flex items-center gap-2">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-bold">{setNumber}</span>
         <input type="number" inputMode="decimal" value={w} onChange={(e) => setW(e.target.value)} className="w-full rounded-md border border-white/15 bg-[#0e0f12] px-2 py-2 text-center text-sm outline-none focus:border-[#e23b30]" />
-        <span className="text-xs text-[#9aa1aa]">kg ×</span>
+        <span className="whitespace-nowrap text-xs text-[#9aa1aa]">{load === "per-hand" ? "kg/hand" : load === "per-side" ? "kg/side" : "kg"} ×</span>
         <input type="number" inputMode="numeric" value={r} onChange={(e) => setR(e.target.value)} className="w-full rounded-md border border-white/15 bg-[#0e0f12] px-2 py-2 text-center text-sm outline-none focus:border-[#e23b30]" />
         <button onClick={() => confirm(w, r)} disabled={saving} className="rounded-md bg-[#e23b30] px-3 py-2 text-xs font-bold text-white">{saving ? "…" : "Save"}</button>
       </div>
@@ -922,9 +961,9 @@ function SetRow({ setNumber, existing, target, onConfirm, onDelete, perSide }: {
       <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${done ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-[#9aa1aa]"}`}>{setNumber}</span>
       <div className="flex-1 text-sm">
         {done ? (
-          <span className="font-semibold">{existing!.weight} kg × {existing!.reps}{perSide ? " / side" : ""}</span>
+          <span className="font-semibold">{weightShort(existing!.weight as number, load)} × {existing!.reps}{perSide ? "/side" : ""}</span>
         ) : (
-          <span className="text-[#9aa1aa]">{target.weight} kg × {target.reps}{perSide ? " / side" : ""}</span>
+          <span className="text-[#9aa1aa]">{weightShort(target.weight, load)} × {target.reps}{perSide ? "/side" : ""}</span>
         )}
       </div>
       <button onClick={() => setEditing(true)} className="text-[11px] text-[#9aa1aa] underline underline-offset-2">edit</button>
