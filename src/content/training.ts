@@ -392,6 +392,38 @@ export const WORKOUTS: Workout[] = [
   },
 ];
 
+// ------------------------------------------------------------ warm-up
+// Every session starts the same way: a few minutes on the treadmill, then a
+// quick dynamic stretch circuit. The treadmill is logged (minutes → set_logs
+// under WARMUP_TREADMILL.id with reps = minutes); stretches are a tap-through
+// checklist and aren't persisted.
+export const WARMUP_TREADMILL = {
+  /** Pseudo exercise id used in set_logs — never a real workout exercise id. */
+  id: "warmup-treadmill",
+  defaultMinutes: 8,
+  cue: "Brisk walk or light jog — break a light sweat, don't tire your legs.",
+};
+
+export interface WarmupStretch {
+  id: string;
+  name: string;
+  /** Reps / duration label, e.g. "10 / direction". */
+  amount: string;
+  cue: string;
+}
+
+// Dynamic (moving) stretches only — static holds before lifting sap strength;
+// save those for after the session.
+export const WARMUP_STRETCHES: WarmupStretch[] = [
+  { id: "arm-circles", name: "Arm circles", amount: "10 / direction", cue: "Start small, grow to full circles. Shoulders relaxed." },
+  { id: "arm-crossovers", name: "Arm crossovers", amount: "10", cue: "Swing arms out wide, then hug your chest." },
+  { id: "torso-twists", name: "Torso twists", amount: "10 / side", cue: "Feet planted, rotate gently through the waist." },
+  { id: "hip-circles", name: "Hip circles", amount: "8 / direction", cue: "Hands on hips, big slow circles." },
+  { id: "leg-swings", name: "Leg swings (front–back)", amount: "10 / leg", cue: "Hold something for balance, swing loose from the hip." },
+  { id: "side-leg-swings", name: "Leg swings (side–side)", amount: "10 / leg", cue: "Swing across your body to open the hips." },
+  { id: "bw-squats", name: "Bodyweight squats", amount: "10", cue: "Slow tempo, full depth, arms out front." },
+];
+
 export const WORKOUT_ORDER: Array<Workout["id"]> = ["A", "B", "C"];
 
 export function getWorkout(id: string): Workout | undefined {

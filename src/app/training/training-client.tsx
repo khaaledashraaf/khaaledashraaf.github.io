@@ -9,6 +9,8 @@ import {
   repRangeLabel,
   loadSuffix,
   byFloor,
+  WARMUP_TREADMILL,
+  WARMUP_STRETCHES,
   type Workout,
   type Exercise,
   type Floor,
@@ -69,8 +71,15 @@ function isSessionComplete(session: SessionRow, allSets: SetRow[]): boolean {
     (ex) => allSets.filter((s) => s.session_id === session.id && s.exercise_id === ex.id && s.weight != null && s.reps != null).length >= ex.sets
   );
 }
+// A session only counts toward the rotation once at least one lift was logged —
+// a warm-up-only session (treadmill logged, then abandoned) mustn't use up its slot.
+function hasLifts(session: SessionRow, sets: SetRow[]): boolean {
+  return sets.some(
+    (x) => x.session_id === session.id && x.exercise_id !== WARMUP_TREADMILL.id && x.weight != null && x.reps != null
+  );
+}
 // The workout to offer next — mirrors WorkoutTab: resume an unfinished session,
-// else advance the A→B→C rotation past the most recent one.
+// else advance the A→B→C rotation past the most recent *lifted* one.
 function nextWorkoutToDo(sessions: SessionRow[], sets: SetRow[]): string {
   const mostRecent = sessions[0];
   // Only *today's* unfinished session is resumable — a past-day session is done,
@@ -79,7 +88,9 @@ function nextWorkoutToDo(sessions: SessionRow[], sets: SetRow[]): string {
     mostRecent && mostRecent.date === todayStr() && !isSessionComplete(mostRecent, sets)
       ? mostRecent
       : null;
-  return active ? active.workout_id : nextWorkoutId(mostRecent?.workout_id);
+  if (active) return active.workout_id;
+  const counted = sessions.find((s) => hasLifts(s, sets));
+  return nextWorkoutId(counted?.workout_id);
 }
 function addDays(dateStr: string, n: number): string {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -584,7 +595,10 @@ function WorkoutTab({ sessions, sets, bodyweightKg, ensureSession, saveSet, dele
     mostRecent && mostRecent.date === date && !isSessionComplete(mostRecent, sets)
       ? mostRecent
       : null;
-  const suggested = activeSession ? activeSession.workout_id : nextWorkoutId(mostRecent?.workout_id);
+  // Rotation advances past the last session that actually had lifts, so an
+  // abandoned warm-up-only session doesn't skip its workout.
+  const lastLifted = sessions.find((s) => hasLifts(s, sets));
+  const suggested = activeSession ? activeSession.workout_id : nextWorkoutId(lastLifted?.workout_id);
   const workout = getWorkout(suggested)!;
 
   // Being inside a session is held in state (captured at mount for resume), so
@@ -643,7 +657,7 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
   deleteSet: (id: string) => Promise<void>;
   onBack: () => void;
 }) {
-  const [phase, setPhase] = useState<"overview" | "focused" | "done">("overview");
+  const [phase, setPhase] = useState<"overview" | "warmup" | "focused" | "done">("overview");
   const [current, setCurrent] = useState(0);
   const [timer, setTimer] = useState<number | null>(null);
 
@@ -659,13 +673,26 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
   const isDone = (ex: Exercise) => setsFor(ex.id).filter((s) => s.weight != null && s.reps != null).length >= ex.sets;
   const allDone = sequence.length > 0 && sequence.every(isDone);
 
+  // Treadmill warm-up is a pseudo-set: minutes live in `reps` under a fixed id.
+  const treadmillSet = sets.find((s) => s.session_id === todaySession?.id && s.exercise_id === WARMUP_TREADMILL.id && s.reps != null);
+  const treadMinutes = treadmillSet?.reps ?? null;
+  const warmupDone = treadMinutes != null;
+
+  async function logTreadmill(minutes: number) {
+    const sid = todaySession?.id ?? (await ensureSession(workout.id, date));
+    if (sid) await saveSet(sid, WARMUP_TREADMILL.id, 1, "", minutes);
+  }
+
   // ---------- done: the finish / celebration screen ----------
   if (phase === "done") {
-    const logged = sets.filter((s) => s.session_id === todaySession?.id && s.weight != null && s.reps != null);
+    const logged = sets.filter((s) => s.session_id === todaySession?.id && s.exercise_id !== WARMUP_TREADMILL.id && s.weight != null && s.reps != null);
     const totalSets = logged.length;
-    const estMinutes = Math.round(10 + totalSets * 2.5); // treadmill warm-up + ~2.5 min/set
+    const tread = treadMinutes ?? 10; // fall back to a nominal warm-up if unlogged
+    const liftMinutes = Math.round(totalSets * 2.5);
+    const estMinutes = tread + liftMinutes;
     const kg = bodyweightKg ?? GOAL.startWeight;
-    const calories = Math.round(5 * kg * (estMinutes / 60)); // ~5 METs for weight training
+    // kcal = METs × kg × hours — ~4 METs brisk treadmill, ~5 METs lifting
+    const calories = Math.round((kg * (4 * tread + 5 * liftMinutes)) / 60);
     const stats: { label: string; value: string }[] = [
       { label: "Sets", value: `${totalSets}` },
       { label: "Est. time", value: `~${estMinutes} min` },
@@ -700,15 +727,49 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
     setTimer(90);
   }
 
+  // ---------- warm-up: treadmill + dynamic stretches before the lifts ----------
+  if (phase === "warmup") {
+    return (
+      <WarmupView
+        minutes={treadMinutes}
+        onSave={logTreadmill}
+        onBack={() => setPhase("overview")}
+        onStart={() => { setCurrent(0); setPhase("focused"); }}
+      />
+    );
+  }
+
   // ---------- overview: the plan for today, then a Start button ----------
   if (phase === "overview") {
-    const anyDone = sequence.some(isDone);
+    // Any *set* logged counts as started — a half-finished exercise must resume
+    // the lifts, not bounce back into the warm-up.
+    const anyLogged = sequence.some((ex) => setsFor(ex.id).some((s) => s.weight != null && s.reps != null));
+    const firstIncomplete = Math.max(0, sequence.findIndex((ex) => !isDone(ex)));
     return (
       <div className="space-y-5 py-4">
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="text-xs text-[#9aa1aa]">‹ Back</button>
           <div className="text-sm font-bold">{workout.id} · {workout.name}</div>
           <span className="w-10" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="pt-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#9aa1aa]">Warm-up</span>
+          </div>
+          <button onClick={() => setPhase("warmup")}
+            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#2f343b] px-3 py-2.5 text-left">
+            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${warmupDone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-[#9aa1aa]"}`}>
+              {warmupDone ? "✓" : "W"}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold">Treadmill + stretches</div>
+              <div className="text-[11px] text-[#9aa1aa]">
+                {warmupDone ? `${treadMinutes} min treadmill · dynamic stretches` : `~${WARMUP_TREADMILL.defaultMinutes} min treadmill · dynamic stretches`}
+              </div>
+            </div>
+            <span className="text-lg text-[#9aa1aa]">›</span>
+          </button>
         </div>
 
         {FLOOR_ORDER.map((floor) => (
@@ -737,9 +798,13 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
         ))}
 
         <button
-          onClick={() => { if (allDone) { setPhase("done"); } else { setCurrent(0); setPhase("focused"); } }}
+          onClick={() => {
+            if (allDone) setPhase("done");
+            else if (!anyLogged && !warmupDone) setPhase("warmup");
+            else { setCurrent(firstIncomplete); setPhase("focused"); }
+          }}
           className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
-          {allDone ? "Finish workout" : anyDone ? "Resume workout" : "Start"}
+          {allDone ? "Finish workout" : anyLogged ? "Resume workout" : warmupDone ? "Start lifting" : "Start warm-up"}
         </button>
       </div>
     );
@@ -781,20 +846,19 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
       {timer === null && (
         <div className="fixed inset-x-0 bottom-16 z-40 mx-auto flex max-w-md items-stretch border-t border-white/10 bg-[#191b20]/95 backdrop-blur"
           style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
-          {/* previous */}
+          {/* previous — from the first exercise it steps back into the warm-up */}
           <button
-            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-            disabled={prev === null}
-            className="flex flex-1 items-center gap-2 border-r border-white/10 px-4 py-3 text-left disabled:opacity-30">
+            onClick={() => (prev ? setCurrent((c) => c - 1) : setPhase("warmup"))}
+            className="flex flex-1 items-center gap-2 border-r border-white/10 px-4 py-3 text-left">
             <span className="shrink-0 text-lg text-[#9aa1aa]">‹</span>
             <div className="min-w-0">
               <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#9aa1aa]">
                 Previous
-                {prev && (prevDone
+                {(prev ? prevDone : warmupDone)
                   ? <span className="text-emerald-400">✓</span>
-                  : <span className="h-1.5 w-1.5 rounded-full bg-white/25" />)}
+                  : <span className="h-1.5 w-1.5 rounded-full bg-white/25" />}
               </div>
-              <div className="truncate text-sm font-semibold">{prev ? prev.name : "—"}</div>
+              <div className="truncate text-sm font-semibold">{prev ? prev.name : "Warm-up"}</div>
             </div>
           </button>
 
@@ -821,6 +885,99 @@ function SessionView({ workout, date, sessions, sets, bodyweightKg, ensureSessio
       )}
 
       {timer !== null && <RestTimer key={timer} seconds={timer} onClose={() => setTimer(null)} />}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ warm-up view
+// Treadmill first (minutes are logged so the finish-screen estimates are real),
+// then a tap-through dynamic stretch circuit. Stretch checks are session-local
+// on purpose — there's nothing to learn from persisting them.
+function WarmupView({ minutes, onSave, onStart, onBack }: {
+  minutes: number | null;
+  onSave: (m: number) => Promise<void>;
+  onStart: () => void;
+  onBack: () => void;
+}) {
+  const [value, setValue] = useState(String(minutes ?? WARMUP_TREADMILL.defaultMinutes));
+  const [saving, setSaving] = useState(false);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const logged = minutes != null;
+  const checkedCount = WARMUP_STRETCHES.filter((s) => checked[s.id]).length;
+
+  async function save() {
+    // Whole minutes only — the reps column this rides on is an integer.
+    const m = Math.round(Number(value));
+    if (!Number.isFinite(m) || m <= 0) return;
+    setSaving(true);
+    await onSave(m);
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="flex items-center justify-between">
+        <button onClick={onBack} className="text-xs text-[#9aa1aa]">‹ Overview</button>
+        <div className="text-sm font-bold">Warm-up</div>
+        <span className="w-16" />
+      </div>
+
+      {/* treadmill */}
+      <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wide">Treadmill</h3>
+          {logged && <span className="text-[11px] font-semibold text-emerald-400">✓ {minutes} min logged</span>}
+        </div>
+        <p className="mt-1 text-[11px] text-[#9aa1aa]">{WARMUP_TREADMILL.cue}</p>
+        <div className="mt-3 flex items-center gap-2">
+          {[5, 8, 10].map((m) => (
+            <button key={m} onClick={() => setValue(String(m))}
+              className={`rounded-md px-2.5 py-2 text-xs font-semibold ${value === String(m) ? "bg-[#e23b30] text-white" : "bg-white/10 text-[#9aa1aa]"}`}>
+              {m}m
+            </button>
+          ))}
+          <input type="number" inputMode="numeric" value={value} onChange={(e) => setValue(e.target.value)}
+            className="w-full rounded-md border border-white/15 bg-[#0e0f12] px-2 py-2 text-center text-sm outline-none focus:border-[#e23b30]" />
+          <span className="whitespace-nowrap text-xs text-[#9aa1aa]">min</span>
+          <button onClick={save} disabled={saving || !Number(value)}
+            className="rounded-md bg-[#e23b30] px-3 py-2 text-xs font-bold text-white disabled:opacity-50">
+            {saving ? "…" : logged ? "Update" : "Log"}
+          </button>
+        </div>
+      </div>
+
+      {/* dynamic stretches */}
+      <div className="rounded-2xl border border-white/10 bg-[#2f343b] p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wide">Dynamic stretches</h3>
+          <span className="text-[11px] text-[#9aa1aa] tabular-nums">{checkedCount}/{WARMUP_STRETCHES.length}</span>
+        </div>
+        <p className="mt-1 text-[11px] text-[#9aa1aa]">Tap each as you finish — about 3 minutes. Keep them moving, no long holds.</p>
+        <div className="mt-3 space-y-1.5">
+          {WARMUP_STRETCHES.map((s) => {
+            const on = !!checked[s.id];
+            return (
+              <button key={s.id} onClick={() => setChecked((c) => ({ ...c, [s.id]: !c[s.id] }))}
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left ${on ? "border-emerald-500/30 bg-emerald-500/10" : "border-white/10 bg-[#0e0f12]"}`}>
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${on ? "bg-emerald-500 text-[#04210f]" : "bg-white/10 text-[#9aa1aa]"}`}>
+                  {on ? "✓" : ""}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className={`truncate text-sm font-semibold ${on ? "text-emerald-300" : ""}`}>{s.name}</span>
+                    <span className="shrink-0 text-[11px] text-[#9aa1aa] tabular-nums">{s.amount}</span>
+                  </div>
+                  <div className="text-[11px] text-[#9aa1aa]">{s.cue}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button onClick={onStart} className="w-full rounded-xl bg-[#e23b30] py-3.5 text-sm font-bold text-white">
+        Start lifting ›
+      </button>
     </div>
   );
 }
@@ -1050,7 +1207,10 @@ function HistorySection({ sessions, sets }: { sessions: SessionRow[]; sets: SetR
 function SessionItem({ session, sets }: { session: SessionRow; sets: SetRow[] }) {
   const [open, setOpen] = useState(false);
   const workout = getWorkout(session.workout_id);
-  const logged = sets.filter((s) => s.weight != null || s.reps != null);
+  // The treadmill warm-up is a pseudo-set (minutes in `reps`) — pull it out so
+  // it doesn't render as an exercise or inflate the exercise count.
+  const treadmill = sets.find((s) => s.exercise_id === WARMUP_TREADMILL.id && s.reps != null);
+  const logged = sets.filter((s) => s.exercise_id !== WARMUP_TREADMILL.id && (s.weight != null || s.reps != null));
   const grouped = useMemo(() => {
     const m = new Map<string, SetRow[]>();
     for (const s of logged) { const a = m.get(s.exercise_id) ?? []; a.push(s); m.set(s.exercise_id, a); }
@@ -1065,6 +1225,12 @@ function SessionItem({ session, sets }: { session: SessionRow; sets: SetRow[] })
       </button>
       {open && (
         <div className="space-y-1.5 border-t border-white/10 px-4 py-3 text-xs">
+          {treadmill && (
+            <div className="flex justify-between gap-3">
+              <span className="text-[#9aa1aa]">Treadmill warm-up</span>
+              <span className="text-right font-semibold tabular-nums">{treadmill.reps} min</span>
+            </div>
+          )}
           {Array.from(grouped.entries()).map(([id, rows]) => (
             <div key={id} className="flex justify-between gap-3">
               <span className="text-[#9aa1aa]">{getExercise(id)?.name ?? id}</span>
